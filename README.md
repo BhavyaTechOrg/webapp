@@ -10,7 +10,7 @@ To start the database server, use the Postgres desktop app.
 
 To verify the connection status, you can use the following `curl` request:
 
-curl -vvvv http://localhost:3000/healthz
+GET request: curl -vvvv http://localhost:3000/healthz
 
 This request will return either "OK" or "Service Unavailable" depending on connection status.
 
@@ -27,15 +27,15 @@ DELETE request: curl -vvvv -X DELETE http://localhost:3000/healthz
 
 PATCH request: curl -vvvv -X PATCH http://localhost:3000/healthz
 
-Setup
+## Setup
 1. Clone the Repository - https://github.com/BhavyaTechOrg/webapp.git
 2. Install Dependencies - npm install
 3. Configure Environment Variables
    Create a .env file in the root directory and add the following environment variables:
-   POSTGRESQL_DB= YOUR DB NAME
-   POSTGRESQL_USER=USERNAME
-   POSTGRESQL_PASSWORD=PASSWORD
-   POSTGRESQL_HOST=localhost
-   PORT=3000
+   1. POSTGRESQL_DB= YOUR DB NAME
+   2. POSTGRESQL_USER=USERNAME
+   3. POSTGRESQL_PASSWORD=PASSWORD
+   4. POSTGRESQL_HOST=localhost
+   5. PORT=3000
 4. Start the Application - npm start
 
