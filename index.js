@@ -29,8 +29,11 @@ process.on("unhandledRejection", (reason, promise) => {
   process.exit(1);
 });
 
-sequelize.sync({alter: true}).then(() => {
+sequelize.sync({ alter: true }).then(() => {
   app.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);
   });
 });
+
+
+module.exports = app;
