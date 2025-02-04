@@ -1,36 +1,37 @@
-// controllers/healthController.js
 const HealthCheck = require("../models/HealthCheck");
 const logger = require("../config/logger");
-const Joi = require("joi");
-
-const validateRequest = (req) => {
-  const schema = Joi.object().keys({});
-  return schema.validate(req.body);
-};
 
 exports.healthCheck = async (req, res) => {
-  const { error } = validateRequest(req);
-  if (error) {
-    logger.warn("Bad Request: Validation failed");
-    res.set("Cache-Control", "no-cache, no-store, must-revalidate");
-    res.set("Pragma", "no-cache");
-    res.set("X-Content-Type-Options", "nosniff")
-    return res.status(400).send(error.details[0].message);
-  }
-
   try {
+    // Check for any payload, query parameters, or route parameters in GET request
+    if (
+      Object.keys(req.body).length !== 0 || 
+      Object.keys(req.query).length !== 0 || 
+      Object.keys(req.params).length !== 0
+    ) {
+      logger.warn("Bad Request: Payload, query parameters, or route parameters are not allowed");
+      res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.set("Pragma", "no-cache");
+      res.set("X-Content-Type-Options", "nosniff");
+      return res.status(400).send(); // No body
+    }
+
+    // Attempt to insert a health check record into the database
     await HealthCheck.create({ datetime: new Date() });
+
     res.set("Cache-Control", "no-cache, no-store, must-revalidate");
     res.set("Pragma", "no-cache");
     res.set("X-Content-Type-Options", "nosniff");
     logger.info("Health check record inserted successfully");
-    res.status(200).send();
+    return res.status(200).send(); // No body
   } catch (err) {
-    logger.error(`Service Unavailable: ${err.message}`);
+    logger.error(`Database Error: ${err.message}`);
+
+    // Handle database-related errors explicitly
     res.set("Cache-Control", "no-cache, no-store, must-revalidate");
     res.set("Pragma", "no-cache");
     res.set("X-Content-Type-Options", "nosniff");
-    res.status(503).send();
+    return res.status(503).send(); // No body
   }
 };
 
@@ -39,5 +40,5 @@ exports.methodNotAllowed = (req, res) => {
   res.set("Cache-Control", "no-cache, no-store, must-revalidate");
   res.set("Pragma", "no-cache");
   res.set("X-Content-Type-Options", "nosniff");
-  res.status(405).send();
+  return res.status(405).send(); // No body
 };
