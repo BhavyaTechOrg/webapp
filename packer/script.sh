@@ -33,3 +33,7 @@ sudo chown -R csye6225user:csye6225group /opt/csye6225
 sudo chmod -R 750 /opt/csye6225
 
 echo "Setup complete!" 
+
+cd ..
+npm install
+npm test
