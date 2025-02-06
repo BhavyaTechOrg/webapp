@@ -1,39 +1,64 @@
 #!/bin/bash
 
-#!/bin/bash
-
 # Update and upgrade packages
-echo "Updating and upgrading system packages..."
+echo "Updating and upgrading system packages"
 sudo apt-get update
 sudo apt-get upgrade -y
 
-# Install PostgreSQL (replace with MySQL or MariaDB if needed)
-echo "Installing PostgreSQL..."
-sudo apt-get install postgresql postgresql-contrib -y
+# Install PostgreSQL, unzip, npm and nodejs
+echo "PostgreSQL Installation"
+sudo apt-get install postgresql postgresql-contrib -y unzip npm nodejs
 
-# Create a database
-echo "Creating database 'csye6225db'..."
-sudo -u postgres psql -c "CREATE DATABASE csye6225db;"
+# Server running
+echo "Postgres is running"
+sudo systemctl enable postgresql
+sudo systemctl start postgresql
+sudo systemctl status postgresql --no-pager
 
+#checking for db configuration
+
+read -rsp "enter database password: " DB_PASSWORD
+echo
+
+if [ -z "$DB_PASSWORD" ]; then
+  echo "please enter the password"
+  exit 1
+fi
+
+#configuring the database 
+
+echo "CONFIGURING DATABASE"
+
+sudo -u postgres psql <<EOF
+
+ALTER USER postgres WITH PASSWORD '$DB_PASSWORD';
+GRANT ALL PRIVILEGES ON DATABASE postgres TO postgres;
+ALTER USER postgres WITH SUPERUSER;
+EOF
+
+# Create a healthcheck_db database
+echo "Creating database 'healthcheck_db'..."
+sudo -u postgres psql -c "CREATE DATABASE healthcheck_db;"
+
+USER="bhavya"
 # Create a Linux group and user
-echo "Creating webapp-main group and user..."
-sudo groupadd csye6225group
-sudo useradd -m -g csye6225group -s /bin/bash csye6225user
+echo "Creating application group and user..."
+sudo groupadd healthcheck_group
+sudo useradd -m -g healthcheck_group -s /bin/bash $USER
 
-# Unzip the webapp-main to /opt/csye6225
-echo "Unzipping webapp-main..."
-sudo mkdir -p /opt/csye6225
-sudo mv /path/to/webapp-main.zip /opt/csye6225/
-sudo apt-get install unzip -y
-sudo unzip /opt/csye6225/webapp-main.zip -d /opt/csye6225
+echo "Unzipping application..."
+sudo mkdir -p "/opt/csye6225"
+sudo unzip -o "/tmp/Bhavya_RaghunathaReddy_002415278_02.zip" -d "/opt/csye6225"
 
 # Update permissions
 echo "Updating permissions..."
-sudo chown -R csye6225user:csye6225group /opt/csye6225
+sudo chown -R $USER:healthcheck_group /opt/csye6225
 sudo chmod -R 750 /opt/csye6225
 
-echo "Setup complete!" 
-
-cd ..
+# Initialize a new Node.js project
+echo "Initializing Node.js project..."
+cd /opt/csye6225/Bhavya_RaghunathaReddy_002415278_02/webapp
 npm install
-npm test
+
+echo "Setup completed"
+
