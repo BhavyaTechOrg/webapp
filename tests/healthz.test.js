@@ -38,7 +38,7 @@ describe("/healthz API Tests", () => {
     HealthCheck.create.mockResolvedValue({}); // Simulate a successful DB insert
 
     const response = await request(app).get("/healthz");
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(200);
     expect(response.body).toEqual({});
     expect(response.headers["cache-control"]).toBe("no-cache, no-store, must-revalidate");
   });
