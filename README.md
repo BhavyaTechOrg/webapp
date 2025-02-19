@@ -1,4 +1,6 @@
 # webapp
+## Assignment 2 
+
 ## Assignment 1: Building a Basic API with Node.js, Express, Sequelize, and PostgreSQL
 
 In this assignment, the objective is to develop a basic API to verify the connection to a local database. The project employs Node.js, Express, Sequelize, and PostgreSQL to demonstrate the necessary functionality.
