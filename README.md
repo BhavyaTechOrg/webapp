@@ -1,4 +1,49 @@
 # webapp
+
+## Assignment 2 - Based Web Application Setup 
+
+Objective - In this assignment, you will set up an AWS organization, configure IAM policies, and automate the deployment of a web application using a shell script. Additionally, you will implement API testing for your web application
+
+### 1. AWS Organization Setup
+Enable AWS Organizations in your root AWS account.
+Create two member accounts:
+Development Account (dev) for assignment development.
+Demo Account (demo) for demonstrating assignments.
+Use email aliases like yourname+dev@gmail.com and yourname+demo@gmail.com
+
+### 2. AWS IAM Setup
+#### 2.1 IAM Group Creation
+Create an IAM Group called csye6225-ta for Teaching Assistants (TAs).
+Assign the ReadOnlyAccess AWS-managed policy (arn:aws:iam::aws:policy/ReadOnlyAccess) to the group.
+
+#### 2.2 IAM User Creation
+Create IAM users for each TA, using their first name as the username.
+AWS will generate a temporary password (not emailed automatically).
+Manually share the credentials with the respective users.
+
+### 3. Automating Application Setup with a Shell Script
+A shell script (script.sh) will automate the deployment of a web application on Ubuntu 24.04 LTS. The script should:
+
+Update the system packages.
+Upgrade installed packages.
+Install PostgreSQL (or MySQL/MariaDB).
+Create a database in the chosen RDBMS.
+Create a Linux group for the application.
+Create a Linux user for the application.
+Unzip the application in the /opt/csye6225 directory.
+Update permissions for the application files.
+The script.sh file for these steps is included in the repository.
+
+### 4. API Testing Implementation
+You must implement API tests using a testing framework (e.g., Jest for JavaScript, REST Assured for Java). The test suite should:
+
+Validate API success and failure scenarios.
+Cover edge cases for the /healthz endpoint.
+Ensure that incorrect HTTP methods return appropriate 405 Method Not Allowed responses.
+
+The test files should be stored in a separate tests directory inside your repository.
+
+
 ## Assignment 1: Building a Basic API with Node.js, Express, Sequelize, and PostgreSQL
 
 In this assignment, the objective is to develop a basic API to verify the connection to a local database. The project employs Node.js, Express, Sequelize, and PostgreSQL to demonstrate the necessary functionality.
