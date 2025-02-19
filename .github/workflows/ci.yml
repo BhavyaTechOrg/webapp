@@ -46,12 +46,5 @@ jobs:
         done
         echo "Postgres did not start in time" && exit 1
 
-    # - name: Set up .env file
-    #   run: |
-    #     echo "DB_NAME=healthcheck_db" >> .env
-    #     echo "DB_USER=postgres" >> .env
-    #     echo "DB_PASSWORD=Root" >> .env
-    #     echo "DB_HOST=localhost" >> .env
-
     - name: Run tests
       run: npm test
