@@ -35,5 +35,4 @@ sequelize.sync({ alter: true }).then(() => {
   });
 });
 
-
 module.exports = app;
