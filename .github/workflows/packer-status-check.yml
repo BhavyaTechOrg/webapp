@@ -39,6 +39,13 @@ jobs:
       - name: Packer Init
         run: packer init packer/
 
+      # Create Dummy Application Artifact for Validation
+      - name: Create Dummy Application Artifact for Validation
+        run: |
+          mkdir -p packer/files
+          echo "This is a dummy webapp artifact for validation." > dummy.txt
+          tar -czvf packer/files/webapp.tar.gz dummy.txt
+
       # Validate the Packer template with required variables from GitHub Secrets/Variables
       - name: Packer Validate
         env:
