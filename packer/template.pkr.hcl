@@ -10,7 +10,7 @@ source "amazon-ebs" "ubuntu" {
   ami_name      = "csye6225-webapp-{{timestamp}}" # Unique AMI name
   instance_type = "t2.micro"
   region        = "us-east-1"
- 
+
 
   source_ami_filter {
     filters = {
