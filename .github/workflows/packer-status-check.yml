@@ -16,29 +16,29 @@ jobs:
       - name: Set up Packer
         uses: hashicorp/setup-packer@v2
 
-      # Ensure packer directory exists before running checks
-      - name: Check if Packer Directory Exists
+      # Ensure packer template exists before running checks
+      - name: Check if Packer Template Exists
         run: |
-          if [ ! -f webapp/packer/template.pkr.hcl ]; then
+          if [ ! -f packer/template.pkr.hcl ]; then
             echo "Packer template file not found!"
             exit 1
           fi
 
       # Ensure correct formatting
-      - name: Packer Format
+      - name: Packer Format Check
         id: fmt
-        run: packer fmt -check webapp/packer/template.pkr.hcl
+        run: packer fmt -check packer/template.pkr.hcl
 
       - name: Check if Packer Format Changed Files
-        if: failure()  # Corrected format check
+        if: failure()  # Fails if formatting is incorrect
         run: |
           echo "Packer template is not formatted correctly. Run 'packer fmt' locally."
           exit 1
 
       # Initialize Packer before validation
       - name: Packer Init
-        run: packer init webapp/packer
+        run: packer init packer/
 
       # Validate the Packer template
       - name: Packer Validate
-        run: packer validate webapp/packer/template.pkr.hcl
+        run: packer validate packer/template.pkr.hcl
