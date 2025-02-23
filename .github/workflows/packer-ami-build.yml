@@ -1,0 +1,72 @@
+name: Packer AMI Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  packer-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      # Ensure `webapp.tar.gz` is always generated at runtime
+      - name: Build Application Artifact
+        run: |
+          mkdir -p packer/files
+          tar -czvf packer/files/webapp.tar.gz ./* --exclude node_modules --exclude .git
+
+      # Authenticate with AWS
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # Authenticate with GCP
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          version: 'latest'
+          project_id: dev-webapp-project-451723  # Replace with actual GCP Project ID
+
+      # Set up Packer
+      - name: Set up Packer
+        uses: hashicorp/setup-packer@v2
+
+      # Initialize and Validate Packer Configuration
+      - name: Initialize and Validate Packer
+        run: |
+          packer init .
+          packer validate \
+            -var "POSTGRES_USER=${{ vars.POSTGRES_USER }}" \
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" \
+            packer/template.pkr.hcl
+
+      # Build AMI and GCP Image
+      - name: Build AMI and GCP Image
+        run: |
+          packer build \
+            -var "POSTGRES_USER=${{ vars.POSTGRES_USER }}" \
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" \
+            packer/template.pkr.hcl

@@ -128,3 +128,7 @@ dist
 .DS_Store
 
 *.pem
+
+
+packer/files/webapp.tar.gz
+packer/variables.pkr.hcl

@@ -1,0 +1,54 @@
+name: Packer Status Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  packer-status-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Packer
+        uses: hashicorp/setup-packer@v2
+
+      # Ensure Packer template exists before running checks
+      - name: Check if Packer Template Exists
+        run: |
+          if [ ! -f packer/template.pkr.hcl ]; then
+            echo "Packer template file not found!"
+            exit 1
+          fi
+
+      # Ensure `webapp.tar.gz` is built before validation
+      - name: Build WebApp Artifact
+        run: |
+          mkdir -p packer/files
+          tar --exclude=node_modules --exclude=.git -czvf packer/files/webapp.tar.gz .
+
+      # Ensure correct formatting
+      - name: Packer Format Check
+        id: fmt
+        run: packer fmt -check packer/template.pkr.hcl
+
+      - name: Check if Packer Format Changed Files
+        if: failure()  # Fails if formatting is incorrect
+        run: |
+          echo "Packer template is not formatted correctly. Run 'packer fmt' locally."
+          exit 1
+
+      # Initialize Packer before validation
+      - name: Packer Init
+        run: packer init packer/
+
+      # Validate the Packer template with variables from GitHub Actions
+      - name: Packer Validate
+        run: |
+          packer validate \
+            -var "POSTGRES_USER=${{ vars.POSTGRES_USER }}" \
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" \
+            packer/template.pkr.hcl
