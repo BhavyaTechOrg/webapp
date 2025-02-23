@@ -52,3 +52,4 @@ jobs:
             -var "POSTGRES_USER=${{ vars.POSTGRES_USER }}" \
             -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" \
             packer/template.pkr.hcl
+
