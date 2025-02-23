@@ -28,7 +28,7 @@ jobs:
       - name: Build WebApp Artifact
         run: |
           mkdir -p packer/files
-          tar -czvf packer/files/webapp.tar.gz ./* --exclude node_modules --exclude .git
+          tar --exclude=node_modules --exclude=.git -czvf packer/files/webapp.tar.gz .
 
       # Ensure correct formatting
       - name: Packer Format Check
