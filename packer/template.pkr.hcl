@@ -11,6 +11,7 @@ source "amazon-ebs" "ubuntu" {
   instance_type = "t2.micro"
   region        = "us-east-1"
 
+
   source_ami_filter {
     filters = {
       name                = "ubuntu-24.04-*-amd64-server-*"
