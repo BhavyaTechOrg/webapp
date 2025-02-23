@@ -24,6 +24,12 @@ jobs:
             exit 1
           fi
 
+      # Ensure `webapp.tar.gz` is built before validation
+      - name: Build WebApp Artifact
+        run: |
+          mkdir -p packer/files
+          tar -czvf packer/files/webapp.tar.gz ./* --exclude node_modules --exclude .git
+
       # Ensure correct formatting
       - name: Packer Format Check
         id: fmt
