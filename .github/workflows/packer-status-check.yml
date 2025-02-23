@@ -30,7 +30,7 @@ jobs:
         run: packer fmt -check packer/template.pkr.hcl
 
       - name: Check if Packer Format Changed Files
-        if: failure()  # Fails if formatting is incorrect
+        if: steps.fmt.outcome != 'success'
         run: |
           echo "Packer template is not formatted correctly. Run 'packer fmt' locally."
           exit 1
@@ -39,6 +39,13 @@ jobs:
       - name: Packer Init
         run: packer init packer/
 
-      # Validate the Packer template
+      # Validate the Packer template with required variables from GitHub Secrets/Variables
       - name: Packer Validate
-        run: packer validate packer/template.pkr.hcl
+        env:
+          POSTGRES_USER: ${{ vars.POSTGRES_USER }}           # GitHub Variable
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }} # GitHub Secret
+        run: |
+          packer validate \
+            -var "POSTGRES_USER=$POSTGRES_USER" \
+            -var "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" \
+            packer/template.pkr.hcl
