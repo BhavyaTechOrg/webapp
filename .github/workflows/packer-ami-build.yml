@@ -24,11 +24,13 @@ jobs:
       - name: Run tests
         run: npm test
 
+      # Ensure `webapp.tar.gz` is always generated at runtime
       - name: Build Application Artifact
         run: |
-          tar -czvf webapp.tar.gz ./* --exclude node_modules # Creating application artifact
+          mkdir -p packer/files
+          tar -czvf packer/files/webapp.tar.gz ./* --exclude node_modules --exclude .git
 
-      # Setting up AWS CLI
+      # Authenticate with AWS
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -36,7 +38,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      # Authenticate with GCP (NO MANUAL FILE CREATION)
+      # Authenticate with GCP
       - name: Authenticate with Google Cloud
         uses: google-github-actions/auth@v1
         with:
@@ -46,21 +48,25 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           version: 'latest'
-          project_id: dev-webapp-project-451723 # Replace with your actual GCP Project ID
+          project_id: dev-webapp-project-451723  # Replace with actual GCP Project ID
 
-      # Setting up Packer
+      # Set up Packer
       - name: Set up Packer
         uses: hashicorp/setup-packer@v2
 
-      # Ensuring the necessary files exist
-      - name: Build webapp tar file
-        run: |
-          mkdir -p webapp/packer/files
-          cp webapp.tar.gz webapp/packer/files/webapp.tar.gz  # Copy artifact to packer directory
-          cp packer/files/webapp.service webapp/packer/files/webapp.service  # Corrected systemd service path
-
-      # Building AMI for AWS & Machine Image for GCP
-      - name: Build AMI and GCP Image
+      # Initialize and Validate Packer Configuration
+      - name: Initialize and Validate Packer
         run: |
           packer init .
-          packer build webapp/packer/template.pkr.hcl
+          packer validate \
+            -var "POSTGRES_USER=${{ vars.POSTGRES_USER }}" \
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" \
+            packer/template.pkr.hcl
+
+      # Build AMI and GCP Image
+      - name: Build AMI and GCP Image
+        run: |
+          packer build \
+            -var "POSTGRES_USER=${{ vars.POSTGRES_USER }}" \
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" \
+            packer/template.pkr.hcl
