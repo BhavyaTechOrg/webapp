@@ -131,3 +131,4 @@ dist
 
 
 packer/files/webapp.tar.gz
+packer/variables.pkr.hcl

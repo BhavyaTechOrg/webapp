@@ -16,7 +16,7 @@ jobs:
       - name: Set up Packer
         uses: hashicorp/setup-packer@v2
 
-      # Ensure packer template exists before running checks
+      # Ensure Packer template exists before running checks
       - name: Check if Packer Template Exists
         run: |
           if [ ! -f packer/template.pkr.hcl ]; then
@@ -30,7 +30,7 @@ jobs:
         run: packer fmt -check packer/template.pkr.hcl
 
       - name: Check if Packer Format Changed Files
-        if: steps.fmt.outcome != 'success'
+        if: failure()  # Fails if formatting is incorrect
         run: |
           echo "Packer template is not formatted correctly. Run 'packer fmt' locally."
           exit 1
@@ -39,21 +39,10 @@ jobs:
       - name: Packer Init
         run: packer init packer/
 
-      # Create Dummy Application Artifact for Validation
-      - name: Create Dummy Application Artifact for Validation
-        run: |
-          mkdir -p packer/files
-          echo "This is a dummy webapp artifact for validation." > dummy.txt
-          tar -czvf packer/files/webapp.tar.gz dummy.txt
-
-      # Validate the Packer template with required variables from GitHub Secrets/Variables
+      # Validate the Packer template with variables from GitHub Actions
       - name: Packer Validate
-        env:
-          POSTGRES_USER: ${{ vars.POSTGRES_USER }}           # GitHub Variable
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }} # GitHub Secret
         run: |
           packer validate \
-            -var "POSTGRES_USER=$POSTGRES_USER" \
-            -var "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" \
+            -var "POSTGRES_USER=${{ vars.POSTGRES_USER }}" \
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" \
             packer/template.pkr.hcl
-

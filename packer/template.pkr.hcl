@@ -1,4 +1,3 @@
-# Define variables (No defaults, must be provided via GitHub Secrets or CLI)
 variable "POSTGRES_USER" {
   type = string
 }
@@ -49,8 +48,8 @@ build {
       "sudo systemctl start postgresql",
       "echo 'Creating PostgreSQL database and user...'",
       "sudo -u postgres psql -c \"CREATE DATABASE webapp;\"",
-      "sudo -u postgres psql -c \"CREATE USER ${POSTGRES_USER} WITH ENCRYPTED PASSWORD '${POSTGRES_PASSWORD}';\"",
-      "sudo -u postgres psql -c \"GRANT ALL PRIVILEGES ON DATABASE webapp TO ${POSTGRES_USER};\"",
+      "sudo -u postgres psql -c \"CREATE USER ${var.POSTGRES_USER} WITH ENCRYPTED PASSWORD '${var.POSTGRES_PASSWORD}';\"",
+      "sudo -u postgres psql -c \"GRANT ALL PRIVILEGES ON DATABASE webapp TO ${var.POSTGRES_USER};\"",
       "sudo systemctl restart postgresql",
 
       # Extract application & install dependencies
@@ -78,8 +77,8 @@ build {
       "NODE_ENV=production",
       "PORT=3000",
       "POSTGRES_DB=webapp",
-      "POSTGRES_USER=${POSTGRES_USER}",
-      "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
+      "POSTGRES_USER=${var.POSTGRES_USER}",
+      "POSTGRES_PASSWORD=${var.POSTGRES_PASSWORD}"
     ]
   }
 
