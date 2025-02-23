@@ -1,0 +1,44 @@
+name: Packer Status Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  packer-status-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Packer
+        uses: hashicorp/setup-packer@v2
+
+      # Ensure packer directory exists before running checks
+      - name: Check if Packer Directory Exists
+        run: |
+          if [ ! -f webapp/packer/template.pkr.hcl ]; then
+            echo "Packer template file not found!"
+            exit 1
+          fi
+
+      # Ensure correct formatting
+      - name: Packer Format
+        id: fmt
+        run: packer fmt -check webapp/packer/template.pkr.hcl
+
+      - name: Check if Packer Format Changed Files
+        if: failure()  # Corrected format check
+        run: |
+          echo "Packer template is not formatted correctly. Run 'packer fmt' locally."
+          exit 1
+
+      # Initialize Packer before validation
+      - name: Packer Init
+        run: packer init webapp/packer
+
+      # Validate the Packer template
+      - name: Packer Validate
+        run: packer validate webapp/packer/template.pkr.hcl

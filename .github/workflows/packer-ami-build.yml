@@ -1,0 +1,66 @@
+name: Packer AMI Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  packer-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build Application Artifact
+        run: |
+          tar -czvf webapp.tar.gz ./* --exclude node_modules # Creating application artifact
+
+      # Setting up AWS CLI
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # Authenticate with GCP (NO MANUAL FILE CREATION)
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          version: 'latest'
+          project_id: dev-webapp-project-451723 # Replace with your actual GCP Project ID
+
+      # Setting up Packer
+      - name: Set up Packer
+        uses: hashicorp/setup-packer@v2
+
+      # Ensuring the necessary files exist
+      - name: Build webapp tar file
+        run: |
+          mkdir -p webapp/packer/files
+          cp webapp.tar.gz webapp/packer/files/webapp.tar.gz  # Copy artifact to packer directory
+          cp packer/files/webapp.service webapp/packer/files/webapp.service  # Corrected systemd service path
+
+      # Building AMI for AWS & Machine Image for GCP
+      - name: Build AMI and GCP Image
+        run: |
+          packer init .
+          packer build webapp/packer/template.pkr.hcl
