@@ -56,3 +56,4 @@ jobs:
             -var "POSTGRES_USER=$POSTGRES_USER" \
             -var "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" \
             packer/template.pkr.hcl
+
