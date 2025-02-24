@@ -1,30 +1,10 @@
-# variable "POSTGRES_USER" {
-#   type = string
-# }
-
-# variable "POSTGRES_PASSWORD" {
-#   type = string
-# }
-
 source "amazon-ebs" "ubuntu" {
   ami_name      = "csye6225-webapp-{{timestamp}}"
   instance_type = "t2.micro"
   region        = "us-east-1"
-  source_ami    = var.ami_id  # Correctly reference the variable
+  source_ami    = var.ami_id # Correctly reference the variable
   ssh_username  = "ubuntu"
 }
-
-
-
-  # source_ami_filter {
-  #   filters = {
-  #     name                = "ubuntu-noble-24.04-*-amd64-server-*"
-  #     root-device-type    = "ebs"
-  #     virtualization-type = "hvm"
-  #   }
-  #   most_recent = true
-  #   owners      = ["099720109477"] # Canonical (Ubuntu)
-  # }
 
 # source "googlecompute" "default" {
 #   image_name          = "csye6225-webapp-{{timestamp}}"
@@ -68,13 +48,7 @@ build {
 
       # Extract application & install dependencies
       "echo 'Extracting application files...'",
-      # "sudo cp /tmp/webapp.zip /opt/webapp/webapp.zip",
-      # "unzip /opt/webapp/webapp.zip -d /opt/webapp/",  # Extract using unzip
       "sudo unzip /tmp/webapp.zip -d /opt/webapp/",
-      # "sudo cd /opt/webapp",
-      # "echo 'Installing Node.js dependencies...'",
-      # "NODE_ENV=production npm install --omit=dev",
-      # "npm run build",
       "sudo groupadd csye6225",
       "sudo useradd --system -g csye6225 csye6225",
       "sudo chown -R csye6225:csye6225 /opt/webapp",
