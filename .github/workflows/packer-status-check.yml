@@ -56,7 +56,7 @@ jobs:
       - name: Packer Validate
         shell: pwsh
         run: |
-         $env:ami_id="${{ vars.AMI_ID }}" 
-         packer/template.pkr.hcl
+          packer validate -var "ami_id=${{ vars.AMI_ID }}" packer/template.pkr.hcl
+         
         
        

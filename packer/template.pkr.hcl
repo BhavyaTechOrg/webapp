@@ -56,6 +56,7 @@ build {
       "sudo systemctl start postgresql",
       "echo 'Creating PostgreSQL database and user...'",
       "sudo -u postgres psql -c \"CREATE DATABASE webapp;\"",
+      # "sudo -u postgres psql -c \"CREATE USER ${var.POSTGRES_USER} WITH ENCRYPTED PASSWORD '${var.POSTGRES_PASSWORD}';\"",
       "sudo -u postgres psql -c \"CREATE USER ${var.POSTGRES_USER} WITH ENCRYPTED PASSWORD '${var.POSTGRES_PASSWORD}';\"",
       "sudo -u postgres psql -c \"GRANT ALL PRIVILEGES ON DATABASE webapp TO ${var.POSTGRES_USER};\"",
       "sudo systemctl restart postgresql",
