@@ -16,7 +16,7 @@ jobs:
       - name: Set up Packer
         uses: hashicorp/setup-packer@v2
 
-      # Ensure Packer template exists before running checks
+      # Ensure Packer Template Exists
       - name: Check if Packer Template Exists
         run: |
           if [ ! -f packer/template.pkr.hcl ]; then
@@ -30,18 +30,18 @@ jobs:
           mkdir -p packer/files
           zip -r packer/files/webapp.zip . -x "node_modules/*" -x ".git/*"
 
-      # Ensure correct formatting
+      # Ensure Correct Formatting
       - name: Packer Format Check
         id: fmt
         run: packer fmt -check packer/template.pkr.hcl
 
       - name: Check if Packer Format Changed Files
-        if: failure()  # Fails if formatting is incorrect
+        if: failure()
         run: |
           echo "Packer template is not formatted correctly. Run 'packer fmt' locally."
           exit 1
 
-      # Initialize Packer before validation
+      # Initialize Packer
       - name: Packer Init
         run: packer init packer/
 
@@ -52,6 +52,6 @@ jobs:
           echo "PKR_VAR_POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
           echo "PKR_VAR_ami_id=${{ vars.AMI_ID }}" >> $GITHUB_ENV
 
-      # Validate the Packer template with secure environment variables
+      # Validate Packer Template
       - name: Packer Validate
         run: packer validate packer/template.pkr.hcl

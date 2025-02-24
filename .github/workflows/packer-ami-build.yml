@@ -24,7 +24,7 @@ jobs:
       - name: Run tests
         run: npm test
 
-      # Create application artifact as a .zip
+      # Create Application Artifact as a ZIP
       - name: Build Application Artifact
         run: |
           mkdir -p packer/files
@@ -42,7 +42,7 @@ jobs:
       - name: Set up Packer
         uses: hashicorp/setup-packer@v2
 
-      # Set Environment Variables in CI
+      # Set Environment Variables in CI/CD
       - name: Set Environment Variables
         run: |
           echo "PKR_VAR_POSTGRES_USER=${{ vars.POSTGRES_USER }}" >> $GITHUB_ENV
