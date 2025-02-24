@@ -3,7 +3,7 @@ name: Packer AMI Build
 on:
   push:
     branches:
-      - main  # Runs when changes are merged into main
+      - main
 
 jobs:
   packer-build:
@@ -24,13 +24,11 @@ jobs:
       - name: Run tests
         run: npm test
 
-      # Create application artifact as a .zip
       - name: Build Application Artifact
         run: |
           mkdir -p packer/files
           zip -r packer/files/webapp.zip . -x "node_modules/*" -x ".git/*"
 
-      # Authenticate with AWS
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -38,20 +36,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      # Set up Packer
       - name: Set up Packer
         uses: hashicorp/setup-packer@v2
 
-      # Set Environment Variables in CI
-      - name: Set Environment Variables
-        run: |
-          echo "PKR_VAR_POSTGRES_USER=${{ vars.POSTGRES_USER }}" >> $GITHUB_ENV
-          echo "PKR_VAR_POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
-          echo "PKR_VAR_ami_id=${{ vars.AMI_ID }}" >> $GITHUB_ENV
-
-      # Run Packer Build
       - name: Build AMI in AWS
         run: |
           packer init packer/
           packer validate packer/template.pkr.hcl
-          packer build packer/template.pkr.hcl
+          packer build \
+            -var "POSTGRES_USER=${{ vars.POSTGRES_USER }}" \
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" \
+            -var "ami_id=${{ vars.AMI_ID }}" \
+            packer/template.pkr.hcl

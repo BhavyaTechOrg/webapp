@@ -7,9 +7,13 @@
 # }
 
 source "amazon-ebs" "ubuntu" {
-  ami_name      = "csye6225-webapp-{{timestamp}}" # Unique AMI name
+  ami_name      = "csye6225-webapp-{{timestamp}}"
   instance_type = "t2.micro"
   region        = "us-east-1"
+  source_ami    = var.ami_id  # Correctly reference the variable
+  ssh_username  = "ubuntu"
+}
+
 
 
   # source_ami_filter {
@@ -21,13 +25,6 @@ source "amazon-ebs" "ubuntu" {
   #   most_recent = true
   #   owners      = ["099720109477"] # Canonical (Ubuntu)
   # }
-
-
-  source_ami = var.ami_id
-
-
-  ssh_username = "ubuntu"
-}
 
 # source "googlecompute" "default" {
 #   image_name          = "csye6225-webapp-{{timestamp}}"
