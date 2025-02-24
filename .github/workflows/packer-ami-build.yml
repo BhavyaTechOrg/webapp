@@ -56,6 +56,12 @@ jobs:
         run: |
           packer init packer/
           packer validate packer/
+            -var "POSTGRES_USER=${{ vars.POSTGRES_USER }}" `
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" `
+            -var "ami_id=${{ vars.AMI_ID }}" `
           packer build packer/
+            -var "POSTGRES_USER=${{ vars.POSTGRES_USER }}" `
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" `
+            -var "ami_id=${{ vars.AMI_ID }}" `
            
             
