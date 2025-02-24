@@ -55,7 +55,7 @@ jobs:
         shell: pwsh
         run: |
           packer init packer/
-          packer validate packer/template.pkr.hcl
-          packer build packer/template.pkr.hcl
+          packer validate packer/
+          packer build packer/
            
             
