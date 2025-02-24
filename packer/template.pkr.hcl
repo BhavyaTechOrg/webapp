@@ -1,3 +1,17 @@
+variable "POSTGRES_USER" {
+  type = string
+}
+
+variable "POSTGRES_PASSWORD" {
+  type = string
+}
+
+variable "ami_id" {
+  type        = string
+  description = "AMI ID of source image"
+}
+
+
 source "amazon-ebs" "ubuntu" {
   ami_name      = "csye6225-webapp-{{timestamp}}"
   instance_type = "t2.micro"
