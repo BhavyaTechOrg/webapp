@@ -23,8 +23,8 @@ source "amazon-ebs" "ubuntu" {
   # }
 
 
-  source_ami    = var.ami_id
-  
+  source_ami = var.ami_id
+
 
   ssh_username = "ubuntu"
 }
@@ -41,8 +41,8 @@ build {
   # sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.default"]
   sources = ["source.amazon-ebs.ubuntu"]
 
-provisioner "file" {
-    source      = "packer/files/webapp.zip"  # Updated to ZIP
+  provisioner "file" {
+    source      = "packer/files/webapp.zip" # Updated to ZIP
     destination = "/tmp/webapp.zip"
   }
 
@@ -58,7 +58,7 @@ provisioner "file" {
       "echo 'Updating system packages...'",
       "sudo apt-get update",
       "echo 'Installing dependencies...'",
-      "sudo apt-get install -y unzip nodejs npm postgresql postgresql-contrib",  # Install unzip
+      "sudo apt-get install -y unzip nodejs npm postgresql postgresql-contrib", # Install unzip
 
       # Ensure PostgreSQL is running and configured
       "echo 'Starting PostgreSQL service...'",
@@ -81,8 +81,8 @@ provisioner "file" {
       "sudo groupadd csye6225",
       "sudo useradd --system -g csye6225 csye6225",
       "sudo chown -R csye6225:csye6225 /opt/webapp",
-      
-      
+
+
       # Setup systemd service
       "echo 'Configuring systemd service...'",
       "sudo cp /tmp/systemd.service /etc/systemd/system/webapp.service",
