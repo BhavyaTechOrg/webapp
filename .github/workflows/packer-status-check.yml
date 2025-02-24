@@ -54,5 +54,10 @@ jobs:
 
       # Validate the Packer template with secure environment variables
       - name: Packer Validate
-        run: packer validate packer/template.pkr.hcl
+        shell: pwsh
+        run: |
+         $env:ami_id="${{ vars.AMI_ID }}" 
+         packer/template.pkr.hcl
+        #  packer validate packer/template.pkr.hcl
+        # run: packer validate packer/template.pkr.hcl
        
