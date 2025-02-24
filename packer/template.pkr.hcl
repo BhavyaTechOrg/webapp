@@ -23,8 +23,8 @@ source "amazon-ebs" "ubuntu" {
   # }
 
 
-  source_ami = var.ami_id
 
+  source_ami = var.ami_id
 
   ssh_username = "ubuntu"
 }
