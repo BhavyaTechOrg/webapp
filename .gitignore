@@ -130,5 +130,5 @@ dist
 *.pem
 
 
-packer/files/webapp.tar.gz
+packer/files/webapp.zip
 packer/variables.pkr.hcl

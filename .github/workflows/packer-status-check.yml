@@ -3,7 +3,7 @@ name: Packer Status Check
 on:
   pull_request:
     branches:
-      - main
+      - main  # Runs on PRs to main
 
 jobs:
   packer-status-check:
@@ -24,11 +24,11 @@ jobs:
             exit 1
           fi
 
-      # Ensure `webapp.tar.gz` is built before validation
+      # Ensure WebApp Artifact is Created Before Validation
       - name: Build WebApp Artifact
         run: |
           mkdir -p packer/files
-          tar --exclude=node_modules --exclude=.git -czvf packer/files/webapp.tar.gz .
+          zip -r packer/files/webapp.zip . -x "node_modules/*" -x ".git/*"
 
       # Ensure correct formatting
       - name: Packer Format Check
@@ -45,11 +45,13 @@ jobs:
       - name: Packer Init
         run: packer init packer/
 
-      # Validate the Packer template with variables from GitHub Actions
-      - name: Packer Validate
+      # Set Environment Variables in CI
+      - name: Set Environment Variables
         run: |
-          packer validate \
-            -var "POSTGRES_USER=${{ vars.POSTGRES_USER }}" \
-            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" \
-            packer/template.pkr.hcl
+          echo "PKR_VAR_POSTGRES_USER=${{ vars.POSTGRES_USER }}" >> $GITHUB_ENV
+          echo "PKR_VAR_POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
+          echo "PKR_VAR_ami_id=${{ vars.AMI_ID }}" >> $GITHUB_ENV
 
+      # Validate the Packer template with secure environment variables
+      - name: Packer Validate
+        run: packer validate packer/template.pkr.hcl
