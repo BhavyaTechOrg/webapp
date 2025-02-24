@@ -54,5 +54,5 @@ jobs:
 
       # Validate the Packer template with secure environment variables
       - name: Packer Validate
-        # run: packer validate packer/template.pkr.hcl
-        run: packer validate packer
+        run: packer validate packer/template.pkr.hcl
+       
