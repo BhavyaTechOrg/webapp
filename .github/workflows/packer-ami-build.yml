@@ -55,10 +55,7 @@ jobs:
         shell: pwsh
         run: |
           packer init packer/
-          packer validate -var "ami_id=${{ vars.AMI_ID }}" 
-          packer/template.pkr.hcl
-          packer build `
-            -var "POSTGRES_USER=${{ vars.POSTGRES_USER }}" `
-            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" `
-            -var "ami_id=${{ vars.AMI_ID }}" `
-            packer/template.pkr.hcl
+          packer validate packer/template.pkr.hcl
+          packer build packer/template.pkr.hcl
+           
+            
