@@ -2,7 +2,7 @@ source "amazon-ebs" "ubuntu" {
   ami_name      = "csye6225-webapp-{{timestamp}}"
   instance_type = "t2.micro"
   region        = "us-east-1"
-  source_ami    = var.ami_id # Correctly reference the variable
+  source_ami    = var.ami_id
   ssh_username  = "ubuntu"
 }
 

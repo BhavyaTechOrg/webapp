@@ -50,8 +50,9 @@ jobs:
         run: |
           echo "PKR_VAR_POSTGRES_USER=${{ vars.POSTGRES_USER }}" >> $GITHUB_ENV
           echo "PKR_VAR_POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
-          echo "PKR_VAR_ami_id=${{ vars.AMI_ID }}" >> $GITHUB_ENV
+          echo "ami_id=${{ vars.AMI_ID }}" >> $GITHUB_ENV
 
       # Validate the Packer template with secure environment variables
       - name: Packer Validate
-        run: packer validate packer/template.pkr.hcl
+        # run: packer validate packer/template.pkr.hcl
+        run: packer validate packer
