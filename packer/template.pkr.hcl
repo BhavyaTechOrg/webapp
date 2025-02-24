@@ -1,10 +1,10 @@
-variable "POSTGRES_USER" {
-  type = string
-}
+# variable "POSTGRES_USER" {
+#   type = string
+# }
 
-variable "POSTGRES_PASSWORD" {
-  type = string
-}
+# variable "POSTGRES_PASSWORD" {
+#   type = string
+# }
 
 source "amazon-ebs" "ubuntu" {
   ami_name      = "csye6225-webapp-{{timestamp}}" # Unique AMI name
@@ -12,29 +12,45 @@ source "amazon-ebs" "ubuntu" {
   region        = "us-east-1"
 
 
-  source_ami_filter {
-    filters = {
-      name                = "ubuntu-24.04-*-amd64-server-*"
-      root-device-type    = "ebs"
-      virtualization-type = "hvm"
-    }
-    most_recent = true
-    owners      = ["099720109477"] # Canonical (Ubuntu)
-  }
+  # source_ami_filter {
+  #   filters = {
+  #     name                = "ubuntu-noble-24.04-*-amd64-server-*"
+  #     root-device-type    = "ebs"
+  #     virtualization-type = "hvm"
+  #   }
+  #   most_recent = true
+  #   owners      = ["099720109477"] # Canonical (Ubuntu)
+  # }
+
+
+  source_ami    = var.ami_id
+  
 
   ssh_username = "ubuntu"
 }
 
-source "googlecompute" "default" {
-  image_name          = "csye6225-webapp-{{timestamp}}"
-  project_id          = "dev-webapp-project-451723" # Replace with actual GCP Project ID
-  source_image_family = "ubuntu-2404-lts"
-  zone                = "us-central1-a"
-  ssh_username        = "ubuntu" # Fix: Explicitly set SSH username
-}
+# source "googlecompute" "default" {
+#   image_name          = "csye6225-webapp-{{timestamp}}"
+#   project_id          = "dev-webapp-project-451723" # Replace with actual GCP Project ID
+#   source_image_family = "ubuntu-2404-lts"
+#   zone                = "us-central1-a"
+#   ssh_username        = "ubuntu" # Fix: Explicitly set SSH username
+# }
 
 build {
-  sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.default"]
+  # sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.default"]
+  sources = ["source.amazon-ebs.ubuntu"]
+
+provisioner "file" {
+    source      = "packer/files/webapp.zip"  # Updated to ZIP
+    destination = "/tmp/webapp.zip"
+  }
+
+  provisioner "file" {
+    source      = "packer/files/webapp.service"
+    destination = "/tmp/systemd.service"
+  }
+
 
   provisioner "shell" {
     inline = [
@@ -42,7 +58,7 @@ build {
       "echo 'Updating system packages...'",
       "sudo apt-get update",
       "echo 'Installing dependencies...'",
-      "sudo apt-get install -y nodejs npm postgresql postgresql-contrib",
+      "sudo apt-get install -y unzip nodejs npm postgresql postgresql-contrib",  # Install unzip
 
       # Ensure PostgreSQL is running and configured
       "echo 'Starting PostgreSQL service...'",
@@ -55,14 +71,18 @@ build {
 
       # Extract application & install dependencies
       "echo 'Extracting application files...'",
-      "sudo cp /tmp/webapp.tar.gz /opt/webapp/webapp.tar.gz",
-      "cd /opt/webapp",
-      "tar -xvf webapp.tar.gz",
-      "echo 'Installing Node.js dependencies...'",
-      "NODE_ENV=production npm install --omit=dev",
-      "npm run build",
+      # "sudo cp /tmp/webapp.zip /opt/webapp/webapp.zip",
+      # "unzip /opt/webapp/webapp.zip -d /opt/webapp/",  # Extract using unzip
+      "sudo unzip /tmp/webapp.zip -d /opt/webapp/",
+      # "sudo cd /opt/webapp",
+      # "echo 'Installing Node.js dependencies...'",
+      # "NODE_ENV=production npm install --omit=dev",
+      # "npm run build",
+      "sudo groupadd csye6225",
+      "sudo useradd --system -g csye6225 csye6225",
       "sudo chown -R csye6225:csye6225 /opt/webapp",
-
+      
+      
       # Setup systemd service
       "echo 'Configuring systemd service...'",
       "sudo cp /tmp/systemd.service /etc/systemd/system/webapp.service",
@@ -81,15 +101,5 @@ build {
       "POSTGRES_USER=${var.POSTGRES_USER}",
       "POSTGRES_PASSWORD=${var.POSTGRES_PASSWORD}"
     ]
-  }
-
-  provisioner "file" {
-    source      = "packer/files/webapp.tar.gz"
-    destination = "/tmp/webapp.tar.gz"
-  }
-
-  provisioner "file" {
-    source      = "packer/files/webapp.service"
-    destination = "/tmp/systemd.service"
   }
 }
