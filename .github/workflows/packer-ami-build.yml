@@ -44,11 +44,19 @@ jobs:
         run: |
           echo "AMI ID from GitHub Actions: ${{ vars.AMI_ID }}"
 
+        # Set Environment Variables in CI
+      - name: Set Environment Variables
+        run: |
+          echo "PKR_VAR_POSTGRES_USER=${{ vars.POSTGRES_USER }}" >> $GITHUB_ENV
+          echo "PKR_VAR_POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
+          echo "ami_id=${{ vars.AMI_ID }}" >> $GITHUB_ENV
+
       - name: Build AMI in AWS
         shell: pwsh
         run: |
           packer init packer/
-          packer validate -var "ami_id=${{ vars.AMI_ID }}" packer/template.pkr.hcl
+          packer validate -var "ami_id=${{ vars.AMI_ID }}" 
+          packer/template.pkr.hcl
           packer build `
             -var "POSTGRES_USER=${{ vars.POSTGRES_USER }}" `
             -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" `
