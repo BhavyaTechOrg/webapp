@@ -94,13 +94,11 @@ jobs:
       - name: Build AMI in AWS
         shell: pwsh
         run: |
-          packer build `
-            -only=amazon-ebs.ubuntu ` # Specifies only AWS build
+          packer build -only=amazon-ebs.ubuntu `
             -var "ami_id=${{ vars.AMI_ID }}" `
             -var "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" `
             -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" `
             packer/template.pkr.hcl
-
 
       # Build Image in GCP using Packer
       - name: Build Image in GCP
