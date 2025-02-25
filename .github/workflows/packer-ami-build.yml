@@ -93,7 +93,7 @@ jobs:
       # Build AMI in AWS using Packer
       - name: Build AMI
         shell: pwsh
-        run: packer build -var "ami_id=${{ vars.AMI_ID }}" -var "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" packer/template.pkr.hcl
+        run: packer build -var "ami_id=${{ vars.AMI_ID }}" -var "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" -var "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" -var "IMAGE_NAME=${{ vars.IMAGE_NAME }}" packer/template.pkr.hcl
 
       # # Build Image in GCP using Packer
       # - name: Build Image in GCP
