@@ -11,6 +11,15 @@ variable "ami_id" {
   description = "AMI ID of source image"
 }
 
+variable "GCP_PROJECT_ID" {
+  type        = string
+  description = "Google Cloud Project ID"
+}
+
+variable "IMAGE_NAME" {
+  type        = string
+  description = "Image name for Google Compute Engine"
+}
 
 source "amazon-ebs" "ubuntu" {
   ami_name      = "csye6225-webapp-{{timestamp}}"
@@ -20,20 +29,19 @@ source "amazon-ebs" "ubuntu" {
   ssh_username  = "ubuntu"
 }
 
-# source "googlecompute" "default" {
-#   image_name          = "csye6225-webapp-{{timestamp}}"
-#   project_id          = "dev-webapp-project-451723" # Replace with actual GCP Project ID
-#   source_image_family = "ubuntu-2404-lts"
-#   zone                = "us-central1-a"
-#   ssh_username        = "ubuntu" # Fix: Explicitly set SSH username
-# }
+source "googlecompute" "default" {
+  image_name          = "csye6225-webapp-{{timestamp}}"
+  project_id          = "dev-webapp-project-451723"
+  source_image_family = "ubuntu-2404-lts-amd64"
+  zone                = "us-central1-a"
+  ssh_username        = "ubuntu"
+}
 
 build {
-  # sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.default"]
-  sources = ["source.amazon-ebs.ubuntu"]
+  sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.default"]
 
   provisioner "file" {
-    source      = "packer/files/webapp.zip" # Updated to ZIP
+    source      = "packer/files/webapp.zip"
     destination = "/tmp/webapp.zip"
   }
 
@@ -42,23 +50,23 @@ build {
     destination = "/tmp/systemd.service"
   }
 
-
   provisioner "shell" {
     inline = [
-      "set -e", # Exit immediately on error
+      "set -e",
       "echo 'Updating system packages...'",
       "sudo apt-get update",
       "echo 'Installing dependencies...'",
-      "sudo apt-get install -y unzip nodejs npm postgresql postgresql-contrib", # Install unzip
+      "sudo apt-get install -y unzip nodejs npm postgresql postgresql-contrib",
 
       # Ensure PostgreSQL is running and configured
       "echo 'Starting PostgreSQL service...'",
-      "sudo systemctl start postgresql",
+      "sudo systemctl enable postgresql",
+      "sudo systemctl restart postgresql",
       "echo 'Creating PostgreSQL database and user...'",
       "sudo -u postgres psql -c \"CREATE DATABASE webapp;\"",
-      # "sudo -u postgres psql -c \"CREATE USER ${var.POSTGRES_USER} WITH ENCRYPTED PASSWORD '${var.POSTGRES_PASSWORD}';\"",
       "sudo -u postgres psql -c \"CREATE USER ${var.POSTGRES_USER} WITH ENCRYPTED PASSWORD '${var.POSTGRES_PASSWORD}';\"",
       "sudo -u postgres psql -c \"GRANT ALL PRIVILEGES ON DATABASE webapp TO ${var.POSTGRES_USER};\"",
+      "sudo -u postgres psql -c \"ALTER DATABASE webapp OWNER TO ${var.POSTGRES_USER};\"",
       "sudo systemctl restart postgresql",
 
       # Extract application & install dependencies
@@ -68,17 +76,17 @@ build {
       "sudo useradd --system -g csye6225 csye6225",
       "sudo chown -R csye6225:csye6225 /opt/webapp",
 
-
       # Setup systemd service
       "echo 'Configuring systemd service...'",
       "sudo cp /tmp/systemd.service /etc/systemd/system/webapp.service",
+      "sudo chmod 644 /etc/systemd/system/webapp.service",
       "sudo systemctl daemon-reload",
       "sudo systemctl enable webapp.service",
       "sudo systemctl start webapp.service",
 
-      # Verify service is running
-      "echo 'Checking webapp service status...'",
-      "sudo systemctl status webapp.service -l"
+      # Validate services are running
+      "sudo systemctl is-active --quiet postgresql || exit 1",
+      "sudo systemctl is-active --quiet webapp.service || exit 1"
     ]
     environment_vars = [
       "NODE_ENV=production",

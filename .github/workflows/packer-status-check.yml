@@ -38,7 +38,7 @@ jobs:
       - name: Check if Packer Format Changed Files
         if: failure()  # Fails if formatting is incorrect
         run: |
-          echo "Packer template is not formatted correctly. Run 'packer fmt' locally."
+          echo "Packer template file is not formatted correctly. Run 'packer fmt' locally."
           exit 1
 
       # Initialize Packer before validation
@@ -50,13 +50,18 @@ jobs:
         run: |
           echo "PKR_VAR_POSTGRES_USER=${{ vars.POSTGRES_USER }}" >> $GITHUB_ENV
           echo "PKR_VAR_POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
+          echo "PKR_VAR_GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" >> $GITHUB_ENV
+          echo "PKR_VAR_IMAGE_NAME=${{ vars.IMAGE_NAME }}" >> $GITHUB_ENV
           echo "ami_id=${{ vars.AMI_ID }}" >> $GITHUB_ENV
 
       # Validate the Packer template with secure environment variables
       - name: Packer Validate
         shell: pwsh
         run: |
-          packer validate -var "ami_id=${{ vars.AMI_ID }}" packer/template.pkr.hcl
-         
-        
-       
+          packer validate `
+            -var "ami_id=${{ vars.AMI_ID }}" `
+            -var "POSTGRES_USER=${{ vars.POSTGRES_USER }}" `
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" `
+            -var "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" `
+            -var "IMAGE_NAME=${{ vars.IMAGE_NAME }}" `
+            packer/template.pkr.hcl

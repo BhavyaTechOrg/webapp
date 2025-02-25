@@ -131,3 +131,4 @@ dist
 
 
 packer/files/webapp.zip
+packer/files/packer-key.json
