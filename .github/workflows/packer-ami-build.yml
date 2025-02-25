@@ -1,10 +1,9 @@
-name: Packer AMI Build
+name: Packer AMI & GCP Build
 
 on:
   push:
     branches:
       - main
-
 
 jobs:
   packer-build:
@@ -30,6 +29,7 @@ jobs:
           mkdir -p packer/files
           zip -r packer/files/webapp.zip . -x "node_modules/*" -x ".git/*"
 
+      # AWS Setup
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -37,34 +37,69 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      # GCP Setup
+      - name: Authenticate GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure GCP Project
+        run: |
+          gcloud config set project ${{ vars.GCP_PROJECT_ID }}
+
       - name: Set up Packer
         uses: hashicorp/setup-packer@v2
 
-      - name: Debug AMI ID
+      - name: Debug AMI & Image Names
         shell: pwsh
         run: |
           echo "AMI ID from GitHub Actions: ${{ vars.AMI_ID }}"
+          echo "GCP Image Name: ${{ vars.IMAGE_NAME }}"
 
-        # Set Environment Variables in CI
+      # Set Environment Variables in CI
       - name: Set Environment Variables
         run: |
           echo "PKR_VAR_POSTGRES_USER=${{ vars.POSTGRES_USER }}" >> $GITHUB_ENV
           echo "PKR_VAR_POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
+          echo "PKR_VAR_GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" >> $GITHUB_ENV
+          echo "PKR_VAR_IMAGE_NAME=${{ vars.IMAGE_NAME }}" >> $GITHUB_ENV
           echo "ami_id=${{ vars.AMI_ID }}" >> $GITHUB_ENV
 
-      - name: Build AMI in AWS
+      # Validate AWS & GCP Images
+      - name: Packer Validate
         shell: pwsh
         run: |
           packer init packer/
           packer validate `
-           -var "ami_id=${{ vars.AMI_ID }}" `
-           -var "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" `
-           -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" `
+            -var "ami_id=${{ vars.AMI_ID }}" `
+            -var "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" `
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" `
+            -var "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" `
+            -var "IMAGE_NAME=${{ vars.IMAGE_NAME }}" `
           ./packer
+
+      # Build AMI in AWS
+      - name: Build AMI in AWS
+        shell: pwsh
+        run: |
           packer build `
-           -var "ami_id=${{ vars.AMI_ID}}" `
-           -var "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" `
-           -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" `
-          ./packer
-           
-            
+            -only=amazon-ebs.ubuntu `
+            -var "ami_id=${{ vars.AMI_ID }}" `
+            -var "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" `
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" `
+          packer/template.pkr.hcl
+
+      # Build Image in GCP
+      - name: Build Image in GCP
+        shell: pwsh
+        run: |
+          packer build `
+            -only=googlecompute.default `
+            -var "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" `
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" `
+            -var "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" `
+            -var "IMAGE_NAME=${{ vars.IMAGE_NAME }}" `
+          packer/template.pkr.hcl
