@@ -33,6 +33,7 @@ jobs:
         run: |
           mkdir -p packer/files
           zip -r packer/files/webapp.zip . -x "node_modules/*" -x ".git/*"
+          
 
       # AWS Authentication - Configure AWS CLI for Packer
       - name: Set up AWS CLI
