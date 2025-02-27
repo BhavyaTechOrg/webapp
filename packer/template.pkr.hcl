@@ -20,9 +20,12 @@ provisioner "shell" {
     # Extract application & install dependencies
     "echo 'Extracting application files...'",
     "sudo unzip /tmp/webapp.zip -d /opt/webapp/",
-    "pwd", # To determine what the working directory is.
+    "pwd", # Print working directory
+    "ls -l /opt/webapp", # List files in /opt/webapp
     "cd /opt/webapp",  # Explicitly change working directory
-    "sudo npm install", # npm install in the webapp directory.
+    "echo 'Running npm install...'",
+    "sudo npm install --verbose",  # Detailed npm install output
+    "echo 'npm install complete.'",
     "sudo groupadd csye6225",
     "sudo useradd --system -g csye6225 csye6225",
     "sudo chown -R csye6225:csye6225 /opt/webapp",
