@@ -52,13 +52,13 @@ build {
 
   provisioner "file" {
     source      = "packer/files/webapp.service"
-    destination = "/tmp/systemd.service"
+    destination = "/tmp/webapp.service"
   }
 
   provisioner "shell" {
     inline = [
       "echo 'Updating systemd service file with database password...'",
-      "sudo sed -i 's/\\${POSTGRES_PASSWORD}/${var.POSTGRES_PASSWORD}/g' /tmp/systemd.service"
+      "sudo sed -i 's/\\${POSTGRES_PASSWORD}/${var.POSTGRES_PASSWORD}/g' /tmp/webapp.service"
     ]
   }
 
@@ -70,7 +70,7 @@ build {
       "sudo apt-get update",
       "echo 'Installing dependencies...'",
       "sudo apt-get install -y unzip nodejs npm postgresql postgresql-contrib",
-
+      
       # Ensure PostgreSQL is running and configured
       "echo 'Starting PostgreSQL service...'",
       "sudo systemctl enable postgresql",
@@ -81,7 +81,7 @@ build {
       "sudo -u postgres psql -c \"GRANT ALL PRIVILEGES ON DATABASE webapp TO ${var.POSTGRES_USER};\"",
       "sudo -u postgres psql -c \"ALTER DATABASE webapp OWNER TO ${var.POSTGRES_USER};\"",
       "sudo systemctl restart postgresql",
-
+      
       # Extract application & install dependencies
       "echo 'Extracting application files...'",
       "sudo unzip /tmp/webapp.zip -d /opt/webapp/",
@@ -94,15 +94,15 @@ build {
       "sudo groupadd csye6225",
       "sudo useradd --system -g csye6225 csye6225",
       "sudo chown -R csye6225:csye6225 /opt/webapp",
-
+      
       # Setup systemd service
       "echo 'Configuring systemd service...'",
-      "sudo cp /tmp/systemd.service /etc/systemd/system/webapp.service",
+      "sudo cp /tmp/webapp.service /etc/systemd/system/webapp.service",
       "sudo chmod 644 /etc/systemd/system/webapp.service",
       "sudo systemctl daemon-reload",
       "sudo systemctl enable webapp.service",
       "sudo systemctl start webapp.service",
-
+      
       # Validate services are running
       "sudo systemctl is-active --quiet postgresql || exit 1",
       "sudo systemctl is-active --quiet webapp.service || exit 1"
