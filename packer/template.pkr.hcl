@@ -55,6 +55,13 @@ build {
     destination = "/tmp/systemd.service"
   }
 
+  provisioner "shell" {
+  inline = [
+    "echo 'Updating systemd service file with database password...'",
+    "sudo sed -i 's/\\${POSTGRES_PASSWORD}/${var.POSTGRES_PASSWORD}/g' /tmp/systemd.service"
+  ]
+}
+
   # Shell Provisioner: Install dependencies and configure the system
   provisioner "shell" {
     inline = [

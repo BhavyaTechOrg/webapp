@@ -16,6 +16,7 @@ Environment=NODE_ENV=production
 Environment=PORT=3000
 Environment=POSTGRES_DB=webapp
 Environment=POSTGRES_USER=csye6225
+Environment=POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 
 [Install]
 WantedBy=multi-user.target
