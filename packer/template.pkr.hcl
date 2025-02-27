@@ -80,6 +80,7 @@ build {
       "sudo chown -R csye6225:csye6225 /opt/webapp",
       "echo 'Installing Node.js dependencies...'",
       "sudo npm install --production --prefix /opt/webapp",
+      
 
       # Setup systemd service
       "echo 'Configuring systemd service...'",
