@@ -77,7 +77,7 @@ build {
       "sudo systemctl enable postgresql",
       "sudo systemctl restart postgresql",
       "echo 'Creating PostgreSQL database and user if not exists...'",
-      "sudo -u postgres psql -c \"DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'webapp') THEN CREATE DATABASE webapp; END IF; END $$;\"",
+      "sudo -u postgres psql -c \"DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'webapp') THEN EXECUTE 'CREATE DATABASE webapp'; END IF; END $$ LANGUAGE plpgsql;\"",
       "sudo -u postgres psql -c \"GRANT ALL PRIVILEGES ON DATABASE webapp TO ${var.POSTGRES_USER};\"",
       "sudo -u postgres psql -c \"ALTER DATABASE webapp OWNER TO ${var.POSTGRES_USER};\"",
       "sudo systemctl restart postgresql",
