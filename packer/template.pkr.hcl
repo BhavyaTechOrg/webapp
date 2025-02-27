@@ -35,7 +35,6 @@ provisioner "shell" {
     "sudo systemctl enable webapp.service",
     "sudo systemctl start webapp.service",
 
-
     # Validate services are running
     "sudo systemctl is-active --quiet postgresql || exit 1",
     "sudo systemctl is-active --quiet webapp.service || exit 1"
