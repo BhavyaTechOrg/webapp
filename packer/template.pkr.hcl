@@ -1,4 +1,3 @@
-# Define variables
 variable "POSTGRES_USER" {
   type = string
 }
@@ -22,7 +21,6 @@ variable "IMAGE_NAME" {
   description = "Image name for Google Compute Engine"
 }
 
-# Define the source image for AWS (Amazon Machine Image)
 source "amazon-ebs" "ubuntu" {
   ami_name      = "csye6225-webapp-{{timestamp}}"
   instance_type = "t2.micro"
@@ -31,7 +29,6 @@ source "amazon-ebs" "ubuntu" {
   ssh_username  = "ubuntu"
 }
 
-# Define the source image for Google Compute Engine
 source "googlecompute" "default" {
   image_name          = "csye6225-webapp-{{timestamp}}"
   project_id          = "dev-webapp-project-451723"
@@ -40,11 +37,9 @@ source "googlecompute" "default" {
   ssh_username        = "ubuntu"
 }
 
-# Define the build process
 build {
   sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.default"]
 
-  # File Provisioners: Copy necessary files to the instance
   provisioner "file" {
     source      = "packer/files/webapp.zip"
     destination = "/tmp/webapp.zip"
@@ -52,17 +47,9 @@ build {
 
   provisioner "file" {
     source      = "packer/files/webapp.service"
-    destination = "/tmp/webapp.service"
+    destination = "/tmp/systemd.service"
   }
 
-  # provisioner "shell" {
-  #   inline = [
-  #     "echo 'Updating webapp service file with database password...'",
-  #     "sudo sed -i 's/\\${POSTGRES_PASSWORD}/${var.POSTGRES_PASSWORD}/g' /tmp/webapp.service"
-  #   ]
-  # }
-
-  # Shell Provisioner: Install dependencies and configure the system
   provisioner "shell" {
     inline = [
       "set -e",
@@ -85,12 +72,6 @@ build {
       # Extract application & install dependencies
       "echo 'Extracting application files...'",
       "sudo unzip /tmp/webapp.zip -d /opt/webapp/",
-      "pwd",
-      "ls -l /opt/webapp",
-      "cd /opt/webapp",
-      "echo 'Running npm install...'",
-      "sudo npm install --verbose",
-      "echo 'npm install complete.'",
       "sudo groupadd csye6225",
       "sudo useradd --system -g csye6225 csye6225",
       "sudo chown -R csye6225:csye6225 /opt/webapp",
