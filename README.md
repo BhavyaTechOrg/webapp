@@ -1,5 +1,52 @@
 # webapp
 
+## Assignment 4
+
+### Custom Machine Images & CI/CD with Packer, Terraform, and Cloud Integration
+
+## Objective:
+
+* Build custom application images (with a local DB installation) using Ubuntu 24.04 LTS.
+* Automate image builds via Packer and integrate CI/CD with GitHub Actions.
+
+### Key Requirements:
+
+### Custom Image Creation:
+
+* Use Ubuntu 24.04 LTS as the source image.
+* Include all necessary application dependencies (e.g., Java/Tomcat or Python libraries) and a local database (MySQL/MariaDB/PostgreSQL).
+* Ensure that the custom images remain private and are built within your DEV AWS account and DEV GCP Project.
+* Build images within your default VPC.
+
+### GitHub Actions Workflows:
+
+* PR Triggers: Run packer fmt and packer validate on pull requests to enforce proper formatting and configuration, blocking merges if issues are detected.
+* Post-Merge Workflow: Trigger a workflow to build custom images in AWS and GCP in parallel (artifact is built on the Actions runner and then copied into the image).
+* Configure systemd to auto-start your application on instance launch, ensuring that application artifacts and configuration files are correctly owned by the non-login user/group csye6225.
+
+### Terraform & Infrastructure:
+
+* Update Terraform templates to create an EC2 security group allowing ingress on ports 22, 80, 443, and the port on which your application runs.
+* Launch an EC2 instance using your custom AMI in a non-default VPC, with EBS volumes set to terminate upon instance termination.
+
+### GCP
+
+* Launch a Compute Engine instance from the custom machine image (ensuring that API endpoints are accessible and database connectivity can be verified).
+
+### Commands to Run in your local machine
+
+* Make sure to pass the env before you run 
+* Replace your postgress username, password and ami_id
+
+$env:PKR_VAR_POSTGRES_USER="yourusername"
+$env:PKR_VAR_POSTGRES_PASSWORD="password"
+$env:PKR_VAR_ami_id="ami-ID"
+
+packer fmt -check packer
+packer init packer
+packer validate packer
+
+
 ## Assignment 3
 
 ### AWS CLI Installation and Configuration (Windows)
