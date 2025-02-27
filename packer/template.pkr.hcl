@@ -58,7 +58,8 @@ build {
   provisioner "shell" {
     inline = [
       "echo 'Updating systemd service file with database password...'",
-      "sudo sed -i \"s/\\\${POSTGRES_PASSWORD}/${var.POSTGRES_PASSWORD}/g\" /tmp/webapp.service"
+      "sudo sed -i 's|POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=${var.POSTGRES_PASSWORD}|' /tmp/webapp.service"
+
     ]
   }
 
