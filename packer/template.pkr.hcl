@@ -33,8 +33,8 @@ source "amazon-ebs" "ubuntu" {
 
 # Define the source image for Google Compute Engine
 source "googlecompute" "default" {
-  image_name          = var.IMAGE_NAME
-  project_id          = var.GCP_PROJECT_ID
+  image_name          = "csye6225-webapp-{{timestamp}}"
+  project_id          = "dev-webapp-project-451723"
   source_image_family = "ubuntu-2404-lts-amd64"
   zone                = "us-central1-a"
   ssh_username        = "ubuntu"
@@ -55,13 +55,12 @@ build {
     destination = "/tmp/webapp.service"
   }
 
-  provisioner "shell" {
-    inline = [
-      "echo 'Updating systemd service file with database password...'",
-      "sudo sed -i 's|POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=${var.POSTGRES_PASSWORD}|' /tmp/webapp.service"
-
-    ]
-  }
+  # provisioner "shell" {
+  #   inline = [
+  #     "echo 'Updating webapp service file with database password...'",
+  #     "sudo sed -i 's/\\${POSTGRES_PASSWORD}/${var.POSTGRES_PASSWORD}/g' /tmp/webapp.service"
+  #   ]
+  # }
 
   # Shell Provisioner: Install dependencies and configure the system
   provisioner "shell" {
@@ -76,8 +75,9 @@ build {
       "echo 'Starting PostgreSQL service...'",
       "sudo systemctl enable postgresql",
       "sudo systemctl restart postgresql",
-      "echo 'Creating PostgreSQL database and user if not exists...'",
-      "sudo -u postgres psql -c \"DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'webapp') THEN EXECUTE 'CREATE DATABASE webapp'; END IF; END $$ LANGUAGE plpgsql;\"",
+      "echo 'Creating PostgreSQL database and user...'",
+      "sudo -u postgres psql -c \"CREATE DATABASE webapp;\"",
+      "sudo -u postgres psql -c \"CREATE USER ${var.POSTGRES_USER} WITH ENCRYPTED PASSWORD '${var.POSTGRES_PASSWORD}';\"",
       "sudo -u postgres psql -c \"GRANT ALL PRIVILEGES ON DATABASE webapp TO ${var.POSTGRES_USER};\"",
       "sudo -u postgres psql -c \"ALTER DATABASE webapp OWNER TO ${var.POSTGRES_USER};\"",
       "sudo systemctl restart postgresql",
@@ -88,30 +88,20 @@ build {
       "pwd",
       "ls -l /opt/webapp",
       "cd /opt/webapp",
-      "echo 'Running npm install as non-root user...'",
-      "sudo -u ubuntu npm install --production",
+      "echo 'Running npm install...'",
+      "sudo npm install --verbose",
       "echo 'npm install complete.'",
-      "sudo groupadd -f csye6225",
+      "sudo groupadd csye6225",
       "sudo useradd --system -g csye6225 csye6225",
       "sudo chown -R csye6225:csye6225 /opt/webapp",
 
-      # Persist environment variables
-      "echo 'NODE_ENV=production' | sudo tee -a /etc/environment",
-      "echo 'PORT=3000' | sudo tee -a /etc/environment",
-      "echo 'POSTGRES_DB=webapp' | sudo tee -a /etc/environment",
-      "echo 'POSTGRES_USER=${var.POSTGRES_USER}' | sudo tee -a /etc/environment",
-      "echo 'POSTGRES_PASSWORD=${var.POSTGRES_PASSWORD}' | sudo tee -a /etc/environment",
-
       # Setup systemd service
       "echo 'Configuring systemd service...'",
-      "sudo cp /tmp/webapp.service /etc/systemd/system/webapp.service",
+      "sudo cp /tmp/systemd.service /etc/systemd/system/webapp.service",
       "sudo chmod 644 /etc/systemd/system/webapp.service",
       "sudo systemctl daemon-reload",
       "sudo systemctl enable webapp.service",
       "sudo systemctl start webapp.service",
-
-      # Ensure PostgreSQL starts automatically
-      "sudo systemctl enable --now postgresql",
 
       # Validate services are running
       "sudo systemctl is-active --quiet postgresql || exit 1",
