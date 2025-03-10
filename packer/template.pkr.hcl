@@ -11,14 +11,17 @@ variable "ami_id" {
   description = "AMI ID of source image"
 }
 
-variable "GCP_PROJECT_ID" {
-  type        = string
-  description = "Google Cloud Project ID"
-}
-
 variable "IMAGE_NAME" {
   type        = string
   description = "Image name for Google Compute Engine"
+}
+
+variable "gcp_project_ids" {
+  type = map(string)
+  default = {
+    dev  = "dev-webapp-project-451723"
+    demo = "tidy-weaver-453318-i5"
+  }
 }
 
 source "amazon-ebs" "ubuntu" {
@@ -26,12 +29,13 @@ source "amazon-ebs" "ubuntu" {
   instance_type = "t2.micro"
   region        = "us-east-1"
   source_ami    = var.ami_id
+  ami_users = ["888577018328", "194722445792"]
   ssh_username  = "ubuntu"
 }
 
 source "googlecompute" "default" {
   image_name          = "csye6225-webapp-{{timestamp}}"
-  project_id          = "dev-webapp-project-451723"
+  project_id          = var.gcp_project_ids["dev"]
   source_image_family = "ubuntu-2404-lts-amd64"
   zone                = "us-central1-a"
   ssh_username        = "ubuntu"
@@ -39,6 +43,8 @@ source "googlecompute" "default" {
 
 build {
   sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.default"]
+  # sources = ["source.googlecompute.default"]
+  
 
   provisioner "file" {
     source      = "packer/files/webapp.zip"
@@ -69,12 +75,14 @@ build {
       "sudo -u postgres psql -c \"ALTER DATABASE webapp OWNER TO ${var.POSTGRES_USER};\"",
       "sudo systemctl restart postgresql",
 
+
       # Extract application & install dependencies
       "echo 'Extracting application files...'",
       "sudo unzip /tmp/webapp.zip -d /opt/webapp/",
       "sudo groupadd csye6225",
       "sudo useradd --system -g csye6225 csye6225",
       "sudo chown -R csye6225:csye6225 /opt/webapp",
+
 
       # Setup systemd service
       "echo 'Configuring systemd service...'",
@@ -96,4 +104,13 @@ build {
       "POSTGRES_PASSWORD=${var.POSTGRES_PASSWORD}"
     ]
   }
+
+post-processor "shell-local" {
+    only = ["googlecompute.default"]
+    inline = [
+        "$env:IMAGE_NAME = $(gcloud compute images list --filter='name~csye6225-webapp-.*' --project=${var.gcp_project_ids["dev"]} --sort-by=~creationTimestamp --limit=1 --format='value(name)')",
+        "gcloud compute images create $env:IMAGE_NAME --project=${var.gcp_project_ids["demo"]} --source-image=$env:IMAGE_NAME --source-image-project=${var.gcp_project_ids["dev"]}"
+    ]
+    # execute_command = ["powershell", "-Command", "{{.Command}}"]
+}
 }
