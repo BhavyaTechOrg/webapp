@@ -16,7 +16,7 @@ variable "IMAGE_NAME" {
   description = "Image name for Google Compute Engine"
 }
 variable "GCP_PROJECT_ID" {
-  type = string
+  type        = string
   description = "GCP project ID for the Packer build"
 }
 
