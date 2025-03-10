@@ -32,9 +32,9 @@ jobs:
       - name: Build Application Artifact
         run: |
           mkdir -p packer/files
-          zip -r packer/files/webapp.zip . -x "node_modules/*" -x ".git/*"
+          zip -r packer/files/webapp.zip . -x ".git/*"
 
-      # AWS Authentication - Configure AWS CLI for Packer
+      # AWS Authentication - Configure AWS CLI for Packer 
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -67,6 +67,7 @@ jobs:
         run: |
           echo "AMI ID from GitHub Actions: ${{ vars.AMI_ID }}"
           echo "GCP Image Name: ${{ vars.IMAGE_NAME }}"
+
 
       # Set environment variables for Packer
       - name: Set Environment Variables
