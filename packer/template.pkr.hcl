@@ -15,6 +15,11 @@ variable "IMAGE_NAME" {
   type        = string
   description = "Image name for Google Compute Engine"
 }
+variable "GCP_PROJECT_ID" {
+  type = string
+  description = "GCP project ID for the Packer build"
+}
+
 
 variable "gcp_project_ids" {
   type = map(string)
