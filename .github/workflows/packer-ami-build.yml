@@ -68,6 +68,7 @@ jobs:
           echo "AMI ID from GitHub Actions: ${{ vars.AMI_ID }}"
           echo "GCP Image Name: ${{ vars.IMAGE_NAME }}"
 
+
       # Set environment variables for Packer
       - name: Set Environment Variables
         run: |

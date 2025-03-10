@@ -29,7 +29,7 @@ source "amazon-ebs" "ubuntu" {
   instance_type = "t2.micro"
   region        = "us-east-1"
   source_ami    = var.ami_id
-  ami_users = ["888577018328", "194722445792"]
+  ami_users     = ["888577018328", "194722445792"]
   ssh_username  = "ubuntu"
 }
 
@@ -44,7 +44,7 @@ source "googlecompute" "default" {
 build {
   sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.default"]
   # sources = ["source.googlecompute.default"]
-  
+
 
   provisioner "file" {
     source      = "packer/files/webapp.zip"
@@ -105,12 +105,12 @@ build {
     ]
   }
 
-post-processor "shell-local" {
+  post-processor "shell-local" {
     only = ["googlecompute.default"]
     inline = [
-        "$env:IMAGE_NAME = $(gcloud compute images list --filter='name~csye6225-webapp-.*' --project=${var.gcp_project_ids["dev"]} --sort-by=~creationTimestamp --limit=1 --format='value(name)')",
-        "gcloud compute images create $env:IMAGE_NAME --project=${var.gcp_project_ids["demo"]} --source-image=$env:IMAGE_NAME --source-image-project=${var.gcp_project_ids["dev"]}"
+      "$env:IMAGE_NAME = $(gcloud compute images list --filter='name~csye6225-webapp-.*' --project=${var.gcp_project_ids["dev"]} --sort-by=~creationTimestamp --limit=1 --format='value(name)')",
+      "gcloud compute images create $env:IMAGE_NAME --project=${var.gcp_project_ids["demo"]} --source-image=$env:IMAGE_NAME --source-image-project=${var.gcp_project_ids["dev"]}"
     ]
     # execute_command = ["powershell", "-Command", "{{.Command}}"]
-}
+  }
 }
