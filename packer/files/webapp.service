@@ -1,16 +1,16 @@
 [Unit]
 Description=csye6225 application
-After=network.target postgresql.service  # Ensures PostgreSQL starts first
+After=network.target postgresql.service
 
 [Service]
 User=csye6225
 Group=csye6225
 WorkingDirectory=/opt/webapp
 ExecStart=/usr/bin/node /opt/webapp/index.js
-Restart=always  # Ensures service restarts even if it stops unexpectedly
-RestartSec=5    # Wait 5 seconds before restarting
-StandardOutput=syslog
-StandardError=syslog
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
 SyslogIdentifier=webapp-service
 Environment=NODE_ENV=production
 Environment=PORT=3000
