@@ -14,10 +14,10 @@ StandardError=journal
 SyslogIdentifier=webapp-service
 Environment=NODE_ENV=production
 Environment=PORT=3000
-Environment=POSTGRES_DB=webapp
-Environment=POSTGRES_USER=csye6225
-Environment=POSTGRES_PASSWORD=Root
-Environment=POSTGRES_HOST=localhost
+Environment=POSTGRESQL_DB=webapp
+Environment=POSTGRESQL_USER=csye6225
+Environment=POSTGRESQL_PASSWORD=Root
+Environment=POSTGRESQL_HOST=localhost
 
 [Install]
 WantedBy=multi-user.target
