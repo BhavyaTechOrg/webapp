@@ -118,15 +118,28 @@ build {
   #   ]
   # execute_command = ["powershell", "-Command", "{{.Command}}"]
   # }
+
   post-processor "shell-local" {
     only = ["googlecompute.default"]
     inline = [
-      "$IMAGE_NAME = $(gcloud compute images list --filter='name~csye6225-webapp-.*' --project=${var.gcp_project_ids["dev"]} --sort-by=~creationTimestamp --limit=1 --format='value(name)')",
-      "if ($null -eq $IMAGE_NAME -or $IMAGE_NAME -eq '') { Write-Host '❌ Error: No image found in GCP DEV project'; exit 1 }",
-      "Write-Host '✅ Latest Image Found: ' $IMAGE_NAME",
-      "gcloud compute images create $IMAGE_NAME --project=${var.gcp_project_ids["demo"]} --source-image=$IMAGE_NAME --source-image-project=${var.gcp_project_ids["dev"]}"
+      # Retrieve the latest image name from GCP DEV project
+      "$env:IMAGE_NAME = $(gcloud compute images list --filter='name~csye6225-webapp-.*' --project=${var.gcp_project_ids["dev"]} --sort-by=~creationTimestamp --limit=1 --format='value(name)')",
+
+      # Check if IMAGE_NAME is empty
+      "if ($null -eq $env:IMAGE_NAME -or $env:IMAGE_NAME -eq '') {",
+      "  Write-Host '❌ Error: No image found in GCP DEV project'",
+      "  exit 1",
+      "}",
+
+      # Display the found image
+      "Write-Host '✅ Latest Image Found: ' $env:IMAGE_NAME",
+
+      # Copy image from DEV to DEMO project
+      "gcloud compute images create $env:IMAGE_NAME --project=${var.gcp_project_ids["demo"]} --source-image=$env:IMAGE_NAME --source-image-project=${var.gcp_project_ids["dev"]}"
     ]
-    execute_command = ["powershell", "-Command", "{{.Command}}"]
+    execute_command = ["powershell", "-NoProfile", "-NonInteractive", "-Command", "{{.Command}}"]
   }
+
+
 
 }
