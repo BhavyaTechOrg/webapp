@@ -39,7 +39,7 @@ source "amazon-ebs" "ubuntu" {
 }
 
 source "googlecompute" "default" {
-  image_name          = "csye6225-webapp-{{timestamp}}"
+  image_name            = "csye6225-webapp-{{timestamp}}"
   project_id          = var.gcp_project_ids["dev"]
   source_image_family = "ubuntu-2404-lts-amd64"
   zone                = "us-central1-a"
