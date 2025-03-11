@@ -32,7 +32,10 @@ jobs:
       - name: Build Application Artifact
         run: |
           mkdir -p packer/files
-          zip -r packer/files/webapp.zip . -x ".git/*"
+          zip -r packer/files/webapp.zip . -x ".git/*" ".github/*" "node_modules/*"
+          
+          # Add debugging to check zip contents
+          unzip -l packer/files/webapp.zip | grep index.js
 
       # AWS Authentication - Configure AWS CLI for Packer 
       - name: Set up AWS CLI
@@ -68,7 +71,6 @@ jobs:
           echo "AMI ID from GitHub Actions: ${{ vars.AMI_ID }}"
           echo "GCP Image Name: ${{ vars.IMAGE_NAME }}"
 
-
       # Set environment variables for Packer
       - name: Set Environment Variables
         run: |
@@ -96,4 +98,26 @@ jobs:
         shell: pwsh
         run: packer build -var "ami_id=${{ vars.AMI_ID }}" -var "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" -var "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" -var "IMAGE_NAME=${{ vars.IMAGE_NAME }}" packer/template.pkr.hcl
 
-    
+      # Copy the newest GCP image from dev to demo project
+      - name: Copy GCP Image to Demo Project
+        shell: bash
+        run: |
+          # Get the latest image name from the dev project
+          LATEST_IMAGE=$(gcloud compute images list --filter='name~csye6225-webapp-.*' --project=dev-webapp-project-451723 --sort-by=~creationTimestamp --limit=1 --format='value(name)')
+          
+          echo "Latest image found: $LATEST_IMAGE"
+          
+          # Check if image exists in demo project and delete if it does
+          if gcloud compute images describe $LATEST_IMAGE --project=tidy-weaver-453318-i5 &> /dev/null; then
+            echo "Image already exists in demo project. Deleting it first..."
+            gcloud compute images delete $LATEST_IMAGE --project=tidy-weaver-453318-i5 --quiet
+          fi
+          
+          # Copy image from dev to demo project
+          echo "Copying image from dev to demo project..."
+          gcloud compute images create $LATEST_IMAGE \
+            --project=tidy-weaver-453318-i5 \
+            --source-image=$LATEST_IMAGE \
+            --source-image-project=dev-webapp-project-451723
+          
+          echo "Image successfully copied to demo project"

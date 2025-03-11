@@ -15,11 +15,11 @@ variable "IMAGE_NAME" {
   type        = string
   description = "Image name for Google Compute Engine"
 }
+
 variable "GCP_PROJECT_ID" {
   type        = string
   description = "GCP project ID for the Packer build"
 }
-
 
 variable "gcp_project_ids" {
   type = map(string)
@@ -48,8 +48,6 @@ source "googlecompute" "default" {
 
 build {
   sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.default"]
-  # sources = ["source.googlecompute.default"]
-
 
   provisioner "file" {
     source      = "packer/files/webapp.zip"
@@ -69,6 +67,10 @@ build {
       "echo 'Installing dependencies...'",
       "sudo apt-get install -y unzip nodejs npm postgresql postgresql-contrib",
 
+      # Debugging - check zip contents before extraction
+      "echo 'Debugging: Showing zip file contents...'",
+      "unzip -l /tmp/webapp.zip | grep index.js",
+
       # Ensure PostgreSQL is running and configured
       "echo 'Starting PostgreSQL service...'",
       "sudo systemctl enable postgresql",
@@ -80,14 +82,49 @@ build {
       "sudo -u postgres psql -c \"ALTER DATABASE webapp OWNER TO ${var.POSTGRES_USER};\"",
       "sudo systemctl restart postgresql",
 
-
       # Extract application & install dependencies
       "echo 'Extracting application files...'",
-      "sudo unzip /tmp/webapp.zip -d /opt/webapp/",
-      "sudo groupadd csye6225",
-      "sudo useradd --system -g csye6225 csye6225",
+      "sudo mkdir -p /opt/webapp",
+
+      # Better extraction approach to handle potential nested directories
+      "sudo unzip /tmp/webapp.zip -d /tmp/webapp-extract",
+      "echo 'Debugging: Extracted contents:'",
+      "ls -la /tmp/webapp-extract",
+
+      # Copy files to final destination, handling potential nested structure
+      "if [ -f /tmp/webapp-extract/index.js ]; then",
+      "  echo 'Found index.js at root level, copying all files...'",
+      "  sudo cp -r /tmp/webapp-extract/* /opt/webapp/",
+      "else",
+      "  echo 'Looking for index.js in subdirectories...'",
+      "  INDEX_DIR=$(find /tmp/webapp-extract -name 'index.js' -exec dirname {} \\; | head -1)",
+      "  if [ -n \"$INDEX_DIR\" ]; then",
+      "    echo \"Found index.js in $INDEX_DIR, copying files from there...\"",
+      "    sudo cp -r \"$INDEX_DIR\"/* /opt/webapp/",
+      "  else",
+      "    echo 'ERROR: index.js not found in zip file!'",
+      "    exit 1",
+      "  fi",
+      "fi",
+
+      # Verify files are in the correct location
+      "echo 'Verifying application files:'",
+      "ls -la /opt/webapp/",
+      "if [ ! -f /opt/webapp/index.js ]; then",
+      "  echo 'ERROR: index.js not found in /opt/webapp/'",
+      "  exit 1",
+      "fi",
+
+      # Set up proper permissions
+      "sudo groupadd csye6225 || echo 'Group already exists'",
+      "sudo useradd --system -g csye6225 csye6225 || echo 'User already exists'",
       "sudo chown -R csye6225:csye6225 /opt/webapp",
 
+      # Install node dependencies if package.json exists
+      "if [ -f /opt/webapp/package.json ]; then",
+      "  echo 'Installing Node.js dependencies...'",
+      "  cd /opt/webapp && sudo npm install --production",
+      "fi",
 
       # Setup systemd service
       "echo 'Configuring systemd service...'",
@@ -97,9 +134,13 @@ build {
       "sudo systemctl enable webapp.service",
       "sudo systemctl start webapp.service",
 
+      # Debug service status if it fails
+      "sudo systemctl status webapp.service || true",
+
       # Validate services are running
-      "sudo systemctl is-active --quiet postgresql || exit 1",
-      "sudo systemctl is-active --quiet webapp.service || exit 1"
+      "echo 'Checking if services are running...'",
+      "sudo systemctl is-active --quiet postgresql || (echo 'PostgreSQL service failed' && exit 1)",
+      "sudo systemctl is-active --quiet webapp.service || (echo 'Webapp service failed' && exit 1)"
     ]
     environment_vars = [
       "NODE_ENV=production",
@@ -109,40 +150,4 @@ build {
       "POSTGRES_PASSWORD=${var.POSTGRES_PASSWORD}"
     ]
   }
-
-  # post-processor "shell-local" {
-  #   only = ["googlecompute.default"]
-  #   inline = [
-  #     "$env:IMAGE_NAME = $(gcloud compute images list --filter='name~csye6225-webapp-.*' --project=${var.gcp_project_ids["dev"]} --sort-by=~creationTimestamp --limit=1 --format='value(name)')",
-  #     "gcloud compute images create $env:IMAGE_NAME --project=${var.gcp_project_ids["demo"]} --source-image=$env:IMAGE_NAME --source-image-project=${var.gcp_project_ids["dev"]}"
-  #   ]
-  # execute_command = ["powershell", "-Command", "{{.Command}}"]
-  # }
-
-  post-processor "shell-local" {
-    only = ["googlecompute.default"]
-    inline = [
-      # Set environment variables for GCP projects
-      "$env:GCP_PROJECT_DEV = '${var.gcp_project_ids["dev"]}'",
-      "$env:GCP_PROJECT_DEMO = '${var.gcp_project_ids["demo"]}'",
-
-      # Get the latest image
-      "$env:IMAGE_NAME = (gcloud compute images list --filter='name~csye6225-webapp-.*' --project=$env:GCP_PROJECT_DEV --sort-by=~creationTimestamp --limit=1 --format='value(name)').Trim()",
-
-      # Check if IMAGE_NAME is empty
-      "if ([string]::IsNullOrWhiteSpace($env:IMAGE_NAME)) {",
-      "  Write-Host '❌ Error: No image found in GCP project $env:GCP_PROJECT_DEV'",
-      "  exit 1",
-      "}",
-
-      # Display the found image
-      "Write-Host '✅ Latest Image Found:' $env:IMAGE_NAME",
-
-      # Copy image between projects
-      "gcloud compute images create $env:IMAGE_NAME --project=$env:GCP_PROJECT_DEMO --source-image=$env:IMAGE_NAME --source-image-project=$env:GCP_PROJECT_DEV"
-    ]
-    execute_command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "{{.Command}}"]
-  }
-
-
 }
