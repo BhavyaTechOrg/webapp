@@ -122,24 +122,27 @@ build {
   post-processor "shell-local" {
     only = ["googlecompute.default"]
     inline = [
-      # Retrieve the latest image name from GCP DEV project
-      "$env:IMAGE_NAME = $(gcloud compute images list --filter='name~csye6225-webapp-.*' --project=${var.gcp_project_ids["dev"]} --sort-by=~creationTimestamp --limit=1 --format='value(name)')",
+      # Set environment variables for GCP projects
+      "$env:GCP_PROJECT_DEV = '${var.gcp_project_ids["dev"]}'",
+      "$env:GCP_PROJECT_DEMO = '${var.gcp_project_ids["demo"]}'",
+
+      # Get the latest image
+      "$env:IMAGE_NAME = (gcloud compute images list --filter='name~csye6225-webapp-.*' --project=$env:GCP_PROJECT_DEV --sort-by=~creationTimestamp --limit=1 --format='value(name)').Trim()",
 
       # Check if IMAGE_NAME is empty
-      "if ($null -eq $env:IMAGE_NAME -or $env:IMAGE_NAME -eq '') {",
-      "  Write-Host '❌ Error: No image found in GCP DEV project'",
+      "if ([string]::IsNullOrWhiteSpace($env:IMAGE_NAME)) {",
+      "  Write-Host '❌ Error: No image found in GCP project $env:GCP_PROJECT_DEV'",
       "  exit 1",
       "}",
 
       # Display the found image
-      "Write-Host '✅ Latest Image Found: ' $env:IMAGE_NAME",
+      "Write-Host '✅ Latest Image Found:' $env:IMAGE_NAME",
 
-      # Copy image from DEV to DEMO project
-      "gcloud compute images create $env:IMAGE_NAME --project=${var.gcp_project_ids["demo"]} --source-image=$env:IMAGE_NAME --source-image-project=${var.gcp_project_ids["dev"]}"
+      # Copy image between projects
+      "gcloud compute images create $env:IMAGE_NAME --project=$env:GCP_PROJECT_DEMO --source-image=$env:IMAGE_NAME --source-image-project=$env:GCP_PROJECT_DEV"
     ]
-    execute_command = ["powershell", "-NoProfile", "-NonInteractive", "-Command", "{{.Command}}"]
+    execute_command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "{{.Command}}"]
   }
-
 
 
 }
