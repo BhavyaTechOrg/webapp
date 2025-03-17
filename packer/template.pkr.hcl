@@ -87,7 +87,7 @@ build {
       "NODE_ENV=production",
       "PORT=3000",
       "POSTGRES_DB=webapp",
-    
+
     ]
   }
 }
