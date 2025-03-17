@@ -1,8 +1,8 @@
-variable "POSTGRES_USER" {
+variable "POSTGRESQL_USER" {
   type = string
 }
 
-variable "POSTGRES_PASSWORD" {
+variable "POSTGRESQL_PASSWORD" {
   type = string
 }
 
@@ -21,18 +21,17 @@ variable "GCP_PROJECT_ID" {
   description = "GCP project ID for the Packer build"
 }
 
+variable "POSTGRESQL_DB" {
+  type    = string
+  default = "webapp"
+}
+
 variable "gcp_project_ids" {
   type = map(string)
   default = {
     dev  = "dev-webapp-project-451723"
     demo = "tidy-weaver-453318-i5"
   }
-}
-
-// Add this missing variable
-variable "POSTGRESQL_DB" {
-  type    = string
-  default = "webapp"
 }
 
 source "amazon-ebs" "ubuntu" {
@@ -128,8 +127,8 @@ build {
 
       # Replace environment variables in service file
       "sudo sed -i \"s/\\${POSTGRESQL_DB}/${var.POSTGRESQL_DB}/g\" /etc/systemd/system/webapp.service",
-      "sudo sed -i \"s/\\${POSTGRESQL_USER}/${var.POSTGRES_USER}/g\" /etc/systemd/system/webapp.service",
-      "sudo sed -i \"s/\\${POSTGRESQL_PASSWORD}/${var.POSTGRES_PASSWORD}/g\" /etc/systemd/system/webapp.service",
+      "sudo sed -i \"s/\\${POSTGRESQL_USER}/${var.POSTGRESQL_USER}/g\" /etc/systemd/system/webapp.service",
+      "sudo sed -i \"s/\\${POSTGRESQL_PASSWORD}/${var.POSTGRESQL_PASSWORD}/g\" /etc/systemd/system/webapp.service",
 
       # Reload systemd and start service
       "sudo systemctl daemon-reload",
@@ -147,9 +146,9 @@ build {
     environment_vars = [
       "NODE_ENV=production",
       "PORT=3000",
-      "POSTGRES_DB=${var.POSTGRESQL_DB}",
-      "POSTGRES_USER=${var.POSTGRES_USER}",
-      "POSTGRES_PASSWORD=${var.POSTGRES_PASSWORD}"
+      "POSTGRESQL_DB=${var.POSTGRESQL_DB}",
+      "POSTGRESQL_USER=${var.POSTGRESQL_USER}",
+      "POSTGRESQL_PASSWORD=${var.POSTGRESQL_PASSWORD}"
     ]
   }
 }
