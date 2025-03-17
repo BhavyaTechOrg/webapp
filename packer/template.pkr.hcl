@@ -1,11 +1,4 @@
 
-variable "POSTGRES_USER" {
-  type = string
-}
-
-variable "POSTGRES_PASSWORD" {
-  type = string
-}
 
 variable "ami_id" {
   type        = string
@@ -94,8 +87,7 @@ build {
       "NODE_ENV=production",
       "PORT=3000",
       "POSTGRES_DB=webapp",
-      "POSTGRES_USER=${var.POSTGRES_USER}",
-      "POSTGRES_PASSWORD=${var.POSTGRES_PASSWORD}"
+    
     ]
   }
 }

@@ -12,12 +12,7 @@ RestartSec=5
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=webapp-service
-
-Environment="NODE_ENV=production"
-Environment="PORT=3000"
-Environment="POSTGRESQL_DB=${POSTGRESQL_DB}"
-Environment="POSTGRESQL_USER=${POSTGRESQL_USER}"
-Environment="POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}"
+EnvironmentFile=/etc/environment
 
 [Install]
 WantedBy=multi-user.target
