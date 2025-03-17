@@ -66,21 +66,21 @@ build {
       "sudo apt-get update",
       "echo 'Installing dependencies...'",
       "sudo apt-get install -y unzip nodejs npm",
-      
+
       "echo 'Extracting application files...'",
       "sudo mkdir -p /opt/webapp",
       "sudo unzip /tmp/webapp.zip -d /tmp/webapp",
       "ls -la /opt/webapp/",
-      
+
       "sudo groupadd csye6225 || echo 'Group already exists'",
       "sudo useradd --system -g csye6225 csye6225 || echo 'User already exists'",
       "sudo chown -R csye6225:csye6225 /opt/webapp",
-      
+
       "if [ -f /opt/webapp/package.json ]; then",
       "  echo 'Installing Node.js dependencies...'",
       "  cd /opt/webapp && sudo npm install --production",
       "fi",
-      
+
       "echo 'Configuring systemd service...'",
       "sudo cp /tmp/systemd.service /etc/systemd/system/webapp.service",
       "sudo chmod 644 /etc/systemd/system/webapp.service",
