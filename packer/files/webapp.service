@@ -13,13 +13,11 @@ StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=webapp-service
 
-# Environment Variables injected by Terraform
 Environment="NODE_ENV=production"
 Environment="PORT=3000"
 Environment="POSTGRESQL_DB=${POSTGRESQL_DB}"
 Environment="POSTGRESQL_USER=${POSTGRESQL_USER}"
 Environment="POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}"
-Environment="POSTGRESQL_HOST=${POSTGRESQL_HOST}"
 
 [Install]
 WantedBy=multi-user.target

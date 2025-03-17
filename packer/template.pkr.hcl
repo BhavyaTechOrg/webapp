@@ -1,7 +1,7 @@
-variable "POSTGRESQL_HOST" {
-  type        = string
-  description = "Database hostname"
-}
+# variable "POSTGRESQL_HOST" {
+#   type        = string
+#   description = "Database hostname"
+# }
 
 variable "POSTGRES_USER" {
   type = string
