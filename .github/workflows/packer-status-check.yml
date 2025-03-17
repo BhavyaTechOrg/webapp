@@ -46,4 +46,4 @@ jobs:
       - name: Packer Validate
         shell: bash
         run: |
-          packer build -var "ami_id=${{vars.AMI_ID}}" -var "POSTGRES_USER=${{secrets.POSTGRES_USER}}" -var "POSTGRES_PASSWORD=${{secrets.POSTGRES_PASSWORD}}" -var "GCP_PROJECT_ID=${{vars.GCP_PROJECT_ID}}" -var "IMAGE_NAME=${{vars.IMAGE_NAME}}"  packer/template.pkr.hcl
+          packer validate -var "ami_id=${{vars.AMI_ID}}" -var "POSTGRES_USER=${{secrets.POSTGRES_USER}}" -var "POSTGRES_PASSWORD=${{secrets.POSTGRES_PASSWORD}}" -var "GCP_PROJECT_ID=${{vars.GCP_PROJECT_ID}}" -var "IMAGE_NAME=${{vars.IMAGE_NAME}}"  packer/template.pkr.hcl
