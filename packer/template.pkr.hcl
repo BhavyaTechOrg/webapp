@@ -1,8 +1,8 @@
-variable "POSTGRES_USER" {
+variable "POSTGRESQL_USER" {
   type = string
 }
 
-variable "POSTGRES_PASSWORD" {
+variable "POSTGRESQL_PASSWORD" {
   type = string
 }
 
@@ -119,8 +119,8 @@ build {
 
       # Replace environment variables in service file
       "sudo sed -i \"s/\\${POSTGRESQL_DB}/${var.POSTGRESQL_DB}/g\" /etc/systemd/system/webapp.service",
-      "sudo sed -i \"s/\\${POSTGRESQL_USER}/${var.POSTGRES_USER}/g\" /etc/systemd/system/webapp.service",
-      "sudo sed -i \"s/\\${POSTGRESQL_PASSWORD}/${var.POSTGRES_PASSWORD}/g\" /etc/systemd/system/webapp.service",
+      "sudo sed -i \"s/\\${POSTGRESQL_USER}/${var.POSTGRESQL_USER}/g\" /etc/systemd/system/webapp.service",
+      "sudo sed -i \"s/\\${POSTGRESQL_PASSWORD}/${var.POSTGRESQL_PASSWORD}/g\" /etc/systemd/system/webapp.service",
 
       # Reload systemd and start service
       "sudo systemctl daemon-reload",
@@ -139,8 +139,8 @@ build {
       "NODE_ENV=production",
       "PORT=3000",
       "POSTGRESQL_DB=${var.POSTGRESQL_DB}",
-      "POSTGRESQL_USER=${var.POSTGRES_USER}",
-      "POSTGRESQL_PASSWORD=${var.POSTGRES_PASSWORD}"
+      "POSTGRESQL_USER=${var.POSTGRESQL_USER}",
+      "POSTGRESQL_PASSWORD=${var.POSTGRESQL_PASSWORD}"
     ]
   }
 }
