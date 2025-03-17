@@ -29,6 +29,12 @@ variable "gcp_project_ids" {
   }
 }
 
+// Add this missing variable
+variable "POSTGRESQL_DB" {
+  type    = string
+  default = "webapp"
+}
+
 source "amazon-ebs" "ubuntu" {
   ami_name      = "csye6225-webapp-{{timestamp}}"
   instance_type = "t2.micro"
@@ -121,7 +127,7 @@ build {
       "sudo chmod 644 /etc/systemd/system/webapp.service",
 
       # Replace environment variables in service file
-      "sudo sed -i \"s/\\${POSTGRESQL_DB}/webapp/g\" /etc/systemd/system/webapp.service",
+      "sudo sed -i \"s/\\${POSTGRESQL_DB}/${var.POSTGRESQL_DB}/g\" /etc/systemd/system/webapp.service",
       "sudo sed -i \"s/\\${POSTGRESQL_USER}/${var.POSTGRES_USER}/g\" /etc/systemd/system/webapp.service",
       "sudo sed -i \"s/\\${POSTGRESQL_PASSWORD}/${var.POSTGRES_PASSWORD}/g\" /etc/systemd/system/webapp.service",
 
@@ -141,7 +147,7 @@ build {
     environment_vars = [
       "NODE_ENV=production",
       "PORT=3000",
-      "POSTGRES_DB=webapp",
+      "POSTGRES_DB=${var.POSTGRESQL_DB}",
       "POSTGRES_USER=${var.POSTGRES_USER}",
       "POSTGRES_PASSWORD=${var.POSTGRES_PASSWORD}"
     ]
