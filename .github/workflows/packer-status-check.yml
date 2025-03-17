@@ -41,7 +41,7 @@ jobs:
           echo "PKR_VAR_POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
           echo "PKR_VAR_GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "PKR_VAR_IMAGE_NAME=${{ vars.IMAGE_NAME }}" >> $GITHUB_ENV
-          echo "PKR_VAR_DB_HOST=${{ secrets.DB_HOST }}" >> $GITHUB_ENV
+          echo "PKR_VAR_POSTGRESQL_HOST=${{ secrets.POSTGRESQL_HOST }}" >> $GITHUB_ENV
           echo "ami_id=${{ vars.AMI_ID }}" >> $GITHUB_ENV
 
       - name: Packer Validate
@@ -53,5 +53,5 @@ jobs:
             -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" \
             -var "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" \
             -var "IMAGE_NAME=${{ vars.IMAGE_NAME }}" \
-            -var "DB_HOST=${{ secrets.DB_HOST }}" \
+            -var "POSTGRESQL_HOST=${{ secrets.POSTGRESQL_HOST }}" \
             packer/template.pkr.hcl
