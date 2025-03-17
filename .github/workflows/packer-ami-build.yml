@@ -34,7 +34,7 @@ jobs:
           mkdir -p packer/files
           zip -r packer/files/webapp.zip . -x ".git/*" ".github/*" "node_modules/*"
 
-      # AWS Authentication - Configure AWS CLI for Packer
+      # AWS Authentication - Configure AWS CLI for Packer 
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -71,8 +71,11 @@ jobs:
       # Set environment variables for Packer
       - name: Set Environment Variables
         run: |
+          echo "PKR_VAR_POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> $GITHUB_ENV
+          echo "PKR_VAR_POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
           echo "PKR_VAR_GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "PKR_VAR_IMAGE_NAME=${{ vars.IMAGE_NAME }}" >> $GITHUB_ENV
+          echo "PKR_VAR_POSTGRESQL_HOST=${{ secrets.POSTGRESQL_HOST }}" >> $GITHUB_ENV
           echo "ami_id=${{ vars.AMI_ID }}" >> $GITHUB_ENV
 
       # Validate Packer Template
@@ -80,17 +83,9 @@ jobs:
         shell: bash
         run: |
           packer init packer/
-          packer validate \
-            -var "ami_id=${{ vars.AMI_ID }}" \
-            -var "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" \
-            -var "IMAGE_NAME=${{ vars.IMAGE_NAME }}" \
-            packer/template.pkr.hcl
+          packer validate -var "ami_id=${{vars.AMI_ID}}" -var "POSTGRES_USER=${{secrets.POSTGRES_USER}}" -var "POSTGRES_PASSWORD=${{secrets.POSTGRES_PASSWORD}}" -var "GCP_PROJECT_ID=${{vars.GCP_PROJECT_ID}}" -var "IMAGE_NAME=${{vars.IMAGE_NAME}}"  packer/template.pkr.hcl
 
       # Build AMI
       - name: Build AMI
         shell: bash
-        run: packer build \
-            -var "ami_id=${{ vars.AMI_ID }}" \
-            -var "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" \
-            -var "IMAGE_NAME=${{ vars.IMAGE_NAME }}" \
-            packer/template.pkr.hcl
+        run: packer build -var "ami_id=${{vars.AMI_ID}}" -var "POSTGRES_USER=${{secrets.POSTGRES_USER}}" -var "POSTGRES_PASSWORD=${{secrets.POSTGRES_PASSWORD}}" -var "GCP_PROJECT_ID=${{vars.GCP_PROJECT_ID}}" -var "IMAGE_NAME=${{vars.IMAGE_NAME}}"  packer/template.pkr.hcl
