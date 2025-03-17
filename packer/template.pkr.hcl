@@ -1,8 +1,8 @@
-variable "POSTGRESQL_USER" {
+variable "POSTGRES_USER" {
   type = string
 }
 
-variable "POSTGRESQL_PASSWORD" {
+variable "POSTGRES_PASSWORD" {
   type = string
 }
 
@@ -26,14 +26,6 @@ variable "POSTGRESQL_DB" {
   default = "webapp"
 }
 
-variable "gcp_project_ids" {
-  type = map(string)
-  default = {
-    dev  = "dev-webapp-project-451723"
-    demo = "tidy-weaver-453318-i5"
-  }
-}
-
 source "amazon-ebs" "ubuntu" {
   ami_name      = "csye6225-webapp-{{timestamp}}"
   instance_type = "t2.micro"
@@ -45,7 +37,7 @@ source "amazon-ebs" "ubuntu" {
 
 source "googlecompute" "default" {
   image_name          = "csye6225-webapp-{{timestamp}}"
-  project_id          = var.gcp_project_ids["dev"]
+  project_id          = var.GCP_PROJECT_ID
   source_image_family = "ubuntu-2404-lts-amd64"
   zone                = "us-central1-a"
   ssh_username        = "ubuntu"
@@ -127,8 +119,8 @@ build {
 
       # Replace environment variables in service file
       "sudo sed -i \"s/\\${POSTGRESQL_DB}/${var.POSTGRESQL_DB}/g\" /etc/systemd/system/webapp.service",
-      "sudo sed -i \"s/\\${POSTGRESQL_USER}/${var.POSTGRESQL_USER}/g\" /etc/systemd/system/webapp.service",
-      "sudo sed -i \"s/\\${POSTGRESQL_PASSWORD}/${var.POSTGRESQL_PASSWORD}/g\" /etc/systemd/system/webapp.service",
+      "sudo sed -i \"s/\\${POSTGRESQL_USER}/${var.POSTGRES_USER}/g\" /etc/systemd/system/webapp.service",
+      "sudo sed -i \"s/\\${POSTGRESQL_PASSWORD}/${var.POSTGRES_PASSWORD}/g\" /etc/systemd/system/webapp.service",
 
       # Reload systemd and start service
       "sudo systemctl daemon-reload",
@@ -147,8 +139,8 @@ build {
       "NODE_ENV=production",
       "PORT=3000",
       "POSTGRESQL_DB=${var.POSTGRESQL_DB}",
-      "POSTGRESQL_USER=${var.POSTGRESQL_USER}",
-      "POSTGRESQL_PASSWORD=${var.POSTGRESQL_PASSWORD}"
+      "POSTGRESQL_USER=${var.POSTGRES_USER}",
+      "POSTGRESQL_PASSWORD=${var.POSTGRES_PASSWORD}"
     ]
   }
 }
