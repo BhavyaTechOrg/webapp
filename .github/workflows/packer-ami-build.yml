@@ -33,9 +33,6 @@ jobs:
         run: |
           mkdir -p packer/files
           zip -r packer/files/webapp.zip . -x ".git/*" ".github/*" "node_modules/*"
-          
-          # Add debugging to check zip contents
-          unzip -l packer/files/webapp.zip | grep index.js
 
       # AWS Authentication - Configure AWS CLI for Packer 
       - name: Set up AWS CLI
@@ -43,7 +40,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1  # Set default region
+          aws-region: us-east-1
 
       # Authenticate with GCP using service account credentials
       - name: Authenticate GCP
@@ -51,7 +48,7 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
-      # Set up Google Cloud SDK (CLI for interacting with GCP)
+      # Set up Google Cloud SDK
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
@@ -64,9 +61,9 @@ jobs:
       - name: Set up Packer
         uses: hashicorp/setup-packer@v2
 
-      # Debug: Display AMI ID and GCP Image Name to ensure correct values
+      # Debug: Display AMI ID and GCP Image Name
       - name: Debug AMI & Image Names
-        shell: pwsh
+        shell: bash
         run: |
           echo "AMI ID from GitHub Actions: ${{ vars.AMI_ID }}"
           echo "GCP Image Name: ${{ vars.IMAGE_NAME }}"
@@ -74,50 +71,35 @@ jobs:
       # Set environment variables for Packer
       - name: Set Environment Variables
         run: |
-          echo "PKR_VAR_POSTGRES_USER=${{ vars.POSTGRES_USER }}" >> $GITHUB_ENV
+          echo "PKR_VAR_POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> $GITHUB_ENV
           echo "PKR_VAR_POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
           echo "PKR_VAR_GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "PKR_VAR_IMAGE_NAME=${{ vars.IMAGE_NAME }}" >> $GITHUB_ENV
+          echo "PKR_VAR_POSTGRESQL_HOST=${{ secrets.POSTGRESQL_HOST }}" >> $GITHUB_ENV
           echo "ami_id=${{ vars.AMI_ID }}" >> $GITHUB_ENV
 
-      # Validate Packer Template to ensure configuration is correct
+      # Validate Packer Template
       - name: Packer Validate
-        shell: pwsh
-        run: |
-          packer init packer/
-          packer validate `
-            -var "ami_id=${{ vars.AMI_ID }}" `
-            -var "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" `
-            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" `
-            -var "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" `
-            -var "IMAGE_NAME=${{ vars.IMAGE_NAME }}" `
-            packer/template.pkr.hcl
-
-      # Build AMI in AWS using Packer
-      - name: Build AMI
-        shell: pwsh
-        run: packer build -var "ami_id=${{ vars.AMI_ID }}" -var "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" -var "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" -var "IMAGE_NAME=${{ vars.IMAGE_NAME }}" packer/template.pkr.hcl
-
-      # Copy the newest GCP image from dev to demo project
-      - name: Copy GCP Image to Demo Project
         shell: bash
         run: |
-          # Get the latest image name from the dev project
-          LATEST_IMAGE=$(gcloud compute images list --filter='name~csye6225-webapp-.*' --project=dev-webapp-project-451723 --sort-by=~creationTimestamp --limit=1 --format='value(name)')
-          
-          echo "Latest image found: $LATEST_IMAGE"
-          
-          # Check if image exists in demo project and delete if it does
-          if gcloud compute images describe $LATEST_IMAGE --project=tidy-weaver-453318-i5 &> /dev/null; then
-            echo "Image already exists in demo project. Deleting it first..."
-            gcloud compute images delete $LATEST_IMAGE --project=tidy-weaver-453318-i5 --quiet
-          fi
-          
-          # Copy image from dev to demo project
-          echo "Copying image from dev to demo project..."
-          gcloud compute images create $LATEST_IMAGE \
-            --project=tidy-weaver-453318-i5 \
-            --source-image=$LATEST_IMAGE \
-            --source-image-project=dev-webapp-project-451723
-          
-          echo "Image successfully copied to demo project"
+          packer init packer/
+          packer validate \
+            -var "ami_id=${{ vars.AMI_ID }}" \
+            -var "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" \
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" \
+            -var "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" \
+            -var "IMAGE_NAME=${{ vars.IMAGE_NAME }}" \
+            -var "POSTGRESQL_HOST=${{ secrets.POSTGRESQL_HOST }}" \
+            packer/template.pkr.hcl
+
+      # Build AMI
+      - name: Build AMI
+        shell: bash
+        run: packer build \
+            -var "ami_id=${{ vars.AMI_ID }}" \
+            -var "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" \
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" \
+            -var "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" \
+            -var "IMAGE_NAME=${{ vars.IMAGE_NAME }}" \
+            -var "POSTGRESQL_HOST=${{ secrets.POSTGRESQL_HOST }}" \
+            packer/template.pkr.hcl

@@ -16,7 +16,6 @@ jobs:
       - name: Set up Packer
         uses: hashicorp/setup-packer@v2
 
-      # Ensure Packer template exists before running checks
       - name: Check if Packer Template Exists
         run: |
           if [ ! -f packer/template.pkr.hcl ]; then
@@ -24,44 +23,35 @@ jobs:
             exit 1
           fi
 
-      # Ensure WebApp Artifact is Created Before Validation
       - name: Build WebApp Artifact
         run: |
           mkdir -p packer/files
           zip -r packer/files/webapp.zip . -x "node_modules/*" -x ".git/*"
 
-      # Ensure correct formatting
       - name: Packer Format Check
         id: fmt
         run: packer fmt -check packer/template.pkr.hcl
 
-      - name: Check if Packer Format Changed Files
-        if: failure()  # Fails if formatting is incorrect
-        run: |
-          echo "Packer template file is not formatted correctly. Run 'packer fmt' locally."
-          exit 1
-
-      # Initialize Packer before validation
       - name: Packer Init
         run: packer init packer/
 
-      # Set Environment Variables in CI
       - name: Set Environment Variables
         run: |
-          echo "PKR_VAR_POSTGRES_USER=${{ vars.POSTGRES_USER }}" >> $GITHUB_ENV
+          echo "PKR_VAR_POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> $GITHUB_ENV
           echo "PKR_VAR_POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
           echo "PKR_VAR_GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "PKR_VAR_IMAGE_NAME=${{ vars.IMAGE_NAME }}" >> $GITHUB_ENV
+          echo "PKR_VAR_POSTGRESQL_HOST=${{ secrets.POSTGRESQL_HOST }}" >> $GITHUB_ENV
           echo "ami_id=${{ vars.AMI_ID }}" >> $GITHUB_ENV
 
-      # Validate the Packer template with secure environment variables
       - name: Packer Validate
-        shell: pwsh
+        shell: bash
         run: |
-          packer validate `
-            -var "ami_id=${{ vars.AMI_ID }}" `
-            -var "POSTGRES_USER=${{ vars.POSTGRES_USER }}" `
-            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" `
-            -var "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" `
-            -var "IMAGE_NAME=${{ vars.IMAGE_NAME }}" `
+          packer validate \
+            -var "ami_id=${{ vars.AMI_ID }}" \
+            -var "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" \
+            -var "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" \
+            -var "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" \
+            -var "IMAGE_NAME=${{ vars.IMAGE_NAME }}" \
+            -var "POSTGRESQL_HOST=${{ secrets.POSTGRESQL_HOST }}" \
             packer/template.pkr.hcl

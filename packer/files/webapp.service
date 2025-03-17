@@ -1,6 +1,6 @@
 [Unit]
-Description=csye6225 application
-After=network.target postgresql.service
+Description=csye6225 Web Application Service
+After=network.target
 
 [Service]
 User=csye6225
@@ -12,12 +12,14 @@ RestartSec=5
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=webapp-service
-Environment=NODE_ENV=production
-Environment=PORT=3000
-Environment=POSTGRESQL_DB=webapp
-Environment=POSTGRESQL_USER=csye6225
-Environment=POSTGRESQL_PASSWORD=Root
-Environment=POSTGRESQL_HOST=localhost
+
+# Environment Variables injected by Terraform
+Environment="NODE_ENV=production"
+Environment="PORT=3000"
+Environment="POSTGRESQL_DB=${POSTGRESQL_DB}"
+Environment="POSTGRESQL_USER=${POSTGRESQL_USER}"
+Environment="POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}"
+Environment="POSTGRESQL_HOST=${POSTGRESQL_HOST}"
 
 [Install]
 WantedBy=multi-user.target
