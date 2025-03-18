@@ -1,56 +1,101 @@
-provisioner "shell" {
-  inline = [
-    "set -e",
-    "echo 'Checking Node.js version...'",
-    "node -v",
-    "echo 'Checking npm version...'",
-    "npm -v",
-    "echo 'Updating system packages...'",
-    "sudo apt-get update",
-    "echo 'Installing dependencies...'",
-    "sudo apt-get install -y unzip nodejs npm",
 
-    # Debugging - check zip contents before extraction
-    "echo 'Debugging: Showing zip file contents...'",
-    "unzip -l /tmp/webapp.zip",
+variable "POSTGRES_USER" {
+  type = string
+}
 
-    # Extract application files
-    "echo 'Extracting application files...'",
-    "sudo mkdir -p /opt/webapp",
-    "sudo unzip /tmp/webapp.zip -d /tmp/webapp-extract",
-    "echo 'Debugging: Extracted contents:'",
-    "ls -la /tmp/webapp-extract",
+variable "POSTGRES_PASSWORD" {
+  type = string
+}
 
-    # Verify application files
-    "echo 'Verifying application files:'",
-    "ls -la /opt/webapp/",
-    "if [ ! -f /opt/webapp/index.js ]; then",
-    "  echo 'ERROR: index.js not found in /opt/webapp/'",
-    "  exit 1",
-    "fi",
+variable "ami_id" {
+  type        = string
+  description = "AMI ID of source image"
+}
 
-    # Set up proper permissions
-    "echo 'Setting permissions for /opt/webapp...'",
-    "sudo chown -R csye6225:csye6225 /opt/webapp",
+variable "IMAGE_NAME" {
+  type        = string
+  description = "Image name for Google Compute Engine"
+}
 
-    # Install dependencies if package.json exists
-    "if [ -f /opt/webapp/package.json ]; then",
-    "  echo 'Installing Node.js dependencies...'",
-    "  cd /opt/webapp && sudo npm install --production",
-    "else",
-    "  echo 'WARNING: No package.json found in /opt/webapp/'",
-    "fi",
+variable "GCP_PROJECT_ID" {
+  type        = string
+  description = "GCP project ID for the Packer build"
+}
 
-    # Enable and start the service
-    "echo 'Configuring systemd service...'",
-    "sudo cp /tmp/systemd.service /etc/systemd/system/webapp.service",
-    "sudo chmod 644 /etc/systemd/system/webapp.service",
-    "sudo systemctl daemon-reload",
-    "sudo systemctl enable webapp.service",
-    "sudo systemctl start webapp.service",
+variable "gcp_project_ids" {
+  type = map(string)
+  default = {
+    dev  = "dev-webapp-project-451723"
+    demo = "tidy-weaver-453318-i5"
+  }
+}
 
-    # Check service status
-    "echo 'Service status:'",
-    "sudo systemctl status webapp.service || true"
-  ]
+source "amazon-ebs" "ubuntu" {
+  ami_name      = "csye6225-webapp-{{timestamp}}"
+  instance_type = "t2.micro"
+  region        = "us-east-1"
+  source_ami    = var.ami_id
+  ami_users     = ["888577018328", "194722445792"]
+  ssh_username  = "ubuntu"
+}
+
+source "googlecompute" "default" {
+  image_name          = "csye6225-webapp-{{timestamp}}"
+  project_id          = var.gcp_project_ids["dev"]
+  source_image_family = "ubuntu-2404-lts-amd64"
+  zone                = "us-central1-a"
+  ssh_username        = "ubuntu"
+}
+
+build {
+  sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.default"]
+
+  provisioner "file" {
+    source      = "packer/files/webapp.zip"
+    destination = "/tmp/webapp.zip"
+  }
+
+  provisioner "file" {
+    source      = "packer/files/webapp.service"
+    destination = "/tmp/systemd.service"
+  }
+
+  provisioner "shell" {
+    inline = [
+      "set -e",
+      "echo 'Updating system packages...'",
+      "sudo apt-get update",
+      "echo 'Installing dependencies...'",
+      "sudo apt-get install -y unzip nodejs npm",
+
+      "echo 'Extracting application files...'",
+      "sudo mkdir -p /opt/webapp",
+      "sudo unzip /tmp/webapp.zip -d /tmp/webapp",
+      "ls -la /opt/webapp/",
+
+      "sudo groupadd csye6225 || echo 'Group already exists'",
+      "sudo useradd --system -g csye6225 csye6225 || echo 'User already exists'",
+      "sudo chown -R csye6225:csye6225 /opt/webapp",
+
+      "if [ -f /opt/webapp/package.json ]; then",
+      "  echo 'Installing Node.js dependencies...'",
+      "  cd /opt/webapp && sudo npm install --production",
+      "fi",
+
+      "echo 'Configuring systemd service...'",
+      "sudo cp /tmp/systemd.service /etc/systemd/system/webapp.service",
+      "sudo chmod 644 /etc/systemd/system/webapp.service",
+      "sudo systemctl daemon-reload",
+      "sudo systemctl enable webapp.service",
+      "sudo systemctl start webapp.service",
+      "sudo systemctl status webapp.service || true"
+    ]
+    environment_vars = [
+      "NODE_ENV=production",
+      "PORT=3000",
+      "POSTGRES_DB=webapp",
+      "POSTGRES_USER=${var.POSTGRES_USER}",
+      "POSTGRES_PASSWORD=${var.POSTGRES_PASSWORD}"
+    ]
+  }
 }
