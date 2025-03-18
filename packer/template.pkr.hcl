@@ -52,8 +52,8 @@ build {
       "sudo touch /etc/webapp.env",
       "sudo chmod 600 /etc/webapp.env",
       "sudo chown csye6225:csye6225 /etc/webapp.env",
-      "sudo echo 'NODE_ENV=production' > /etc/webapp.env",
-      "sudo echo 'PORT=3000' >> /etc/webapp.env",
+      "sudo sh -c 'echo \"NODE_ENV=production\" > /etc/webapp.env'", # Fixed with sudo
+      "sudo sh -c 'echo \"PORT=3000\" >> /etc/webapp.env'",          # Fixed with sudo
 
       "echo 'Configuring systemd service...'",
       "sudo cp /tmp/systemd.service /etc/systemd/system/webapp.service",
