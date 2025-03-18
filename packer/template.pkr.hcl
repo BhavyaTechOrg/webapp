@@ -48,13 +48,20 @@ build {
       "  cd /opt/webapp && sudo npm install --production",
       "fi",
 
+      "echo 'Creating placeholder webapp.env file...'",
+      "sudo touch /etc/webapp.env",
+      "sudo chmod 600 /etc/webapp.env",
+      "sudo chown csye6225:csye6225 /etc/webapp.env",
+      "sudo echo 'NODE_ENV=production' > /etc/webapp.env",
+      "sudo echo 'PORT=3000' >> /etc/webapp.env",
+
       "echo 'Configuring systemd service...'",
       "sudo cp /tmp/systemd.service /etc/systemd/system/webapp.service",
       "sudo chmod 644 /etc/systemd/system/webapp.service",
       "sudo systemctl daemon-reload",
       "sudo systemctl enable webapp.service",
-      "sudo systemctl start webapp.service",
-      "sudo systemctl status webapp.service || true"
+
+      "echo 'Note: Service will be started by user-data when instance launches with proper database credentials'"
     ]
     environment_vars = [
       "NODE_ENV=production",
