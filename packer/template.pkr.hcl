@@ -1,10 +1,10 @@
-# variable "POSTGRESQL_USER" {
-#   type = string
-# }
+variable "POSTGRESQL_USER" {
+  type = string
+}
 
-# variable "POSTGRESQL_PASSWORD" {
-#   type = string
-# }
+variable "POSTGRESQL_PASSWORD" {
+  type = string
+}
 
 variable "ami_id" {
   type        = string
@@ -21,10 +21,10 @@ variable "GCP_PROJECT_ID" {
   description = "GCP project ID for the Packer build"
 }
 
-# variable "POSTGRESQL_DB" {
-#   type    = string
-#   default = "webapp"
-# }
+variable "POSTGRESQL_DB" {
+  type    = string
+  default = "webapp"
+}
 
 source "amazon-ebs" "ubuntu" {
   ami_name      = "csye6225-webapp-{{timestamp}}"
