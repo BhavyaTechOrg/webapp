@@ -1,10 +1,3 @@
-variable "POSTGRESQL_USER" {
-  type = string
-}
-
-variable "POSTGRESQL_PASSWORD" {
-  type = string
-}
 
 variable "ami_id" {
   type        = string
@@ -16,16 +9,6 @@ variable "IMAGE_NAME" {
   description = "Image name for Google Compute Engine"
 }
 
-variable "GCP_PROJECT_ID" {
-  type        = string
-  description = "GCP project ID for the Packer build"
-}
-
-variable "POSTGRESQL_DB" {
-  type    = string
-  default = "webapp"
-}
-
 source "amazon-ebs" "ubuntu" {
   ami_name      = "csye6225-webapp-{{timestamp}}"
   instance_type = "t2.micro"
@@ -35,16 +18,8 @@ source "amazon-ebs" "ubuntu" {
   ssh_username  = "ubuntu"
 }
 
-source "googlecompute" "default" {
-  image_name          = "csye6225-webapp-{{timestamp}}"
-  project_id          = var.GCP_PROJECT_ID
-  source_image_family = "ubuntu-2404-lts-amd64"
-  zone                = "us-central1-a"
-  ssh_username        = "ubuntu"
-}
-
 build {
-  sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.default"]
+  sources = ["source.amazon-ebs.ubuntu"]
 
   provisioner "file" {
     source      = "packer/files/webapp.zip"
@@ -117,11 +92,6 @@ build {
       "sudo cp /tmp/systemd.service /etc/systemd/system/webapp.service",
       "sudo chmod 644 /etc/systemd/system/webapp.service",
 
-      # Use environment variables in the sed commands to replace values in service file
-      # "sudo sed -i 's|\\${POSTGRESQL_DB}|${POSTGRESQL_DB}|g' /etc/systemd/system/webapp.service",
-      # "sudo sed -i 's|\\${POSTGRESQL_USER}|${POSTGRES_USER}|g' /etc/systemd/system/webapp.service",
-      # "sudo sed -i 's|\\${POSTGRESQL_PASSWORD}|${POSTGRES_PASSWORD}|g' /etc/systemd/system/webapp.service",
-
       # Reload systemd and start service
       "sudo systemctl daemon-reload",
       "sudo systemctl enable webapp.service",
@@ -138,9 +108,6 @@ build {
     environment_vars = [
       "NODE_ENV=production",
       "PORT=3000",
-      "POSTGRESQL_DB=${var.POSTGRESQL_DB}",
-      "POSTGRESQL_USER=${var.POSTGRESQL_USER}",
-      "POSTGRESQL_PASSWORD=${var.POSTGRESQL_PASSWORD}"
     ]
   }
 }
