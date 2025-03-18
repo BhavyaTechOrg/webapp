@@ -1,34 +1,18 @@
 
-variable "POSTGRES_USER" {
-  type = string
-}
-
-variable "POSTGRES_PASSWORD" {
-  type = string
-}
 
 variable "ami_id" {
   type        = string
   description = "AMI ID of source image"
 }
 
-variable "IMAGE_NAME" {
-  type        = string
-  description = "Image name for Google Compute Engine"
-}
+
 
 variable "GCP_PROJECT_ID" {
   type        = string
   description = "GCP project ID for the Packer build"
 }
 
-variable "gcp_project_ids" {
-  type = map(string)
-  default = {
-    dev  = "dev-webapp-project-451723"
-    demo = "tidy-weaver-453318-i5"
-  }
-}
+
 
 source "amazon-ebs" "ubuntu" {
   ami_name      = "csye6225-webapp-{{timestamp}}"
@@ -39,16 +23,10 @@ source "amazon-ebs" "ubuntu" {
   ssh_username  = "ubuntu"
 }
 
-source "googlecompute" "default" {
-  image_name          = "csye6225-webapp-{{timestamp}}"
-  project_id          = var.gcp_project_ids["dev"]
-  source_image_family = "ubuntu-2404-lts-amd64"
-  zone                = "us-central1-a"
-  ssh_username        = "ubuntu"
-}
+
 
 build {
-  sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.default"]
+  sources = ["source.amazon-ebs.ubuntu"]
 
   provisioner "file" {
     source      = "packer/files/webapp.zip"
@@ -93,9 +71,6 @@ build {
     environment_vars = [
       "NODE_ENV=production",
       "PORT=3000",
-      "POSTGRES_DB=webapp",
-      "POSTGRES_USER=${var.POSTGRES_USER}",
-      "POSTGRES_PASSWORD=${var.POSTGRES_PASSWORD}"
     ]
   }
 }
