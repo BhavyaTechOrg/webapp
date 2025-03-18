@@ -1,18 +1,7 @@
-
-
 variable "ami_id" {
   type        = string
   description = "AMI ID of source image"
 }
-
-
-
-variable "GCP_PROJECT_ID" {
-  type        = string
-  description = "GCP project ID for the Packer build"
-}
-
-
 
 source "amazon-ebs" "ubuntu" {
   ami_name      = "csye6225-webapp-{{timestamp}}"
@@ -22,8 +11,6 @@ source "amazon-ebs" "ubuntu" {
   ami_users     = ["888577018328", "194722445792"]
   ssh_username  = "ubuntu"
 }
-
-
 
 build {
   sources = ["source.amazon-ebs.ubuntu"]
@@ -49,6 +36,7 @@ build {
       "echo 'Extracting application files...'",
       "sudo mkdir -p /opt/webapp",
       "sudo unzip /tmp/webapp.zip -d /tmp/webapp",
+      "sudo cp -R /tmp/webapp/* /opt/webapp/",
       "ls -la /opt/webapp/",
 
       "sudo groupadd csye6225 || echo 'Group already exists'",
