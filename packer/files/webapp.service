@@ -15,9 +15,7 @@ SyslogIdentifier=webapp-service
 
 Environment="NODE_ENV=production"
 Environment="PORT=3000"
-Environment="POSTGRESQL_DB=${POSTGRESQL_DB}"
-Environment="POSTGRESQL_USER=${POSTGRESQL_USER}"
-Environment="POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}"
+EnvironmentFile=/etc/webapp.env
 
 [Install]
 WantedBy=multi-user.target
