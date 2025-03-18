@@ -118,9 +118,9 @@ build {
       "sudo chmod 644 /etc/systemd/system/webapp.service",
 
       # Replace environment variables in service file
-      "sudo sed -i \"s/\\${POSTGRESQL_DB}/${var.POSTGRESQL_DB}/g\" /etc/systemd/system/webapp.service",
-      "sudo sed -i \"s/\\${POSTGRESQL_USER}/${var.POSTGRESQL_USER}/g\" /etc/systemd/system/webapp.service",
-      "sudo sed -i \"s/\\${POSTGRESQL_PASSWORD}/${var.POSTGRESQL_PASSWORD}/g\" /etc/systemd/system/webapp.service",
+      "sudo sed -i 's|\\${POSTGRESQL_DB}|${var.POSTGRESQL_DB}|g' /etc/systemd/system/webapp.service",
+      "sudo sed -i 's|\\${POSTGRESQL_USER}|${var.POSTGRESQL_USER}|g' /etc/systemd/system/webapp.service",
+      "sudo sed -i 's|\\${POSTGRESQL_PASSWORD}|${var.POSTGRESQL_PASSWORD}|g' /etc/systemd/system/webapp.service",
 
       # Reload systemd and start service
       "sudo systemctl daemon-reload",
