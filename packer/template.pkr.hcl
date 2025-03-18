@@ -1,13 +1,8 @@
-# variable "POSTGRESQL_HOST" {
-#   type        = string
-#   description = "Database hostname"
-# }
-
-variable "POSTGRES_USER" {
+variable "POSTGRESQL_USER" {
   type = string
 }
 
-variable "POSTGRES_PASSWORD" {
+variable "POSTGRESQL_PASSWORD" {
   type = string
 }
 
@@ -26,12 +21,9 @@ variable "GCP_PROJECT_ID" {
   description = "GCP project ID for the Packer build"
 }
 
-variable "gcp_project_ids" {
-  type = map(string)
-  default = {
-    dev  = "dev-webapp-project-451723"
-    demo = "tidy-weaver-453318-i5"
-  }
+variable "POSTGRESQL_DB" {
+  type    = string
+  default = "webapp"
 }
 
 source "amazon-ebs" "ubuntu" {
@@ -45,7 +37,7 @@ source "amazon-ebs" "ubuntu" {
 
 source "googlecompute" "default" {
   image_name          = "csye6225-webapp-{{timestamp}}"
-  project_id          = var.gcp_project_ids["dev"]
+  project_id          = var.GCP_PROJECT_ID
   source_image_family = "ubuntu-2404-lts-amd64"
   zone                = "us-central1-a"
   ssh_username        = "ubuntu"
@@ -72,34 +64,83 @@ build {
       "echo 'Installing dependencies...'",
       "sudo apt-get install -y unzip nodejs npm",
 
+      # Debugging - check zip contents before extraction
+      "echo 'Debugging: Showing zip file contents...'",
+      "unzip -l /tmp/webapp.zip",
+
+      # Extract application files
       "echo 'Extracting application files...'",
       "sudo mkdir -p /opt/webapp",
-      "sudo unzip /tmp/webapp.zip -d /tmp/webapp",
-      "ls -la /opt/webapp/",
+      "sudo unzip /tmp/webapp.zip -d /tmp/webapp-extract",
+      "echo 'Debugging: Extracted contents:'",
+      "ls -la /tmp/webapp-extract",
 
+      # Copy files to final destination, handling potential nested structure
+      "if [ -f /tmp/webapp-extract/index.js ]; then",
+      "  echo 'Found index.js at root level, copying all files...'",
+      "  sudo cp -r /tmp/webapp-extract/* /opt/webapp/",
+      "else",
+      "  echo 'Looking for index.js in subdirectories...'",
+      "  INDEX_DIR=$(find /tmp/webapp-extract -name 'index.js' -exec dirname {} \\; | head -1)",
+      "  if [ -n \"$INDEX_DIR\" ]; then",
+      "    echo \"Found index.js in $INDEX_DIR, copying files from there...\"",
+      "    sudo cp -r \"$INDEX_DIR\"/* /opt/webapp/",
+      "  else",
+      "    echo 'ERROR: index.js not found in zip file!'",
+      "    exit 1",
+      "  fi",
+      "fi",
+
+      # Verify files are in the correct location
+      "echo 'Verifying application files:'",
+      "ls -la /opt/webapp/",
+      "if [ ! -f /opt/webapp/index.js ]; then",
+      "  echo 'ERROR: index.js not found in /opt/webapp/'",
+      "  exit 1",
+      "fi",
+
+      # Set up proper permissions
       "sudo groupadd csye6225 || echo 'Group already exists'",
       "sudo useradd --system -g csye6225 csye6225 || echo 'User already exists'",
       "sudo chown -R csye6225:csye6225 /opt/webapp",
 
+      # Install node dependencies if package.json exists
       "if [ -f /opt/webapp/package.json ]; then",
       "  echo 'Installing Node.js dependencies...'",
       "  cd /opt/webapp && sudo npm install --production",
+      "else",
+      "  echo 'WARNING: No package.json found in /opt/webapp/'",
       "fi",
 
+      # Setup and configure systemd service
       "echo 'Configuring systemd service...'",
       "sudo cp /tmp/systemd.service /etc/systemd/system/webapp.service",
       "sudo chmod 644 /etc/systemd/system/webapp.service",
+
+      # Use environment variables in the sed commands to replace values in service file
+      # "sudo sed -i 's|\\${POSTGRESQL_DB}|${POSTGRESQL_DB}|g' /etc/systemd/system/webapp.service",
+      # "sudo sed -i 's|\\${POSTGRESQL_USER}|${POSTGRES_USER}|g' /etc/systemd/system/webapp.service",
+      # "sudo sed -i 's|\\${POSTGRESQL_PASSWORD}|${POSTGRES_PASSWORD}|g' /etc/systemd/system/webapp.service",
+
+      # Reload systemd and start service
       "sudo systemctl daemon-reload",
       "sudo systemctl enable webapp.service",
       "sudo systemctl start webapp.service",
-      "sudo systemctl status webapp.service || true"
+
+      # More detailed service status information for debugging
+      "echo 'Service status:'",
+      "sudo systemctl status webapp.service || true",
+
+      # Check service logs for more detailed error information
+      "echo 'Service logs:'",
+      "sudo journalctl -u webapp.service --no-pager -n 20 || true"
     ]
     environment_vars = [
       "NODE_ENV=production",
       "PORT=3000",
-      "POSTGRES_DB=webapp",
-      "POSTGRES_USER=${var.POSTGRES_USER}",
-      "POSTGRES_PASSWORD=${var.POSTGRES_PASSWORD}"
+      "POSTGRESQL_DB=${var.POSTGRESQL_DB}",
+      "POSTGRESQL_USER=${var.POSTGRESQL_USER}",
+      "POSTGRESQL_PASSWORD=${var.POSTGRESQL_PASSWORD}"
     ]
   }
 }
