@@ -16,13 +16,13 @@ build {
   sources = ["source.amazon-ebs.ubuntu"]
 
   provisioner "file" {
-    source      = "webapp.zip"
+    source      = "packer/files/webapp.zip"
     destination = "/tmp/webapp.zip"
   }
 
   provisioner "file" {
-    source      = "webapp.service"
-    destination = "/tmp/webapp.service"
+    source      = "packer/files/webapp.service"
+    destination = "/tmp/systemd.service"
   }
 
   provisioner "shell" {
@@ -33,34 +33,39 @@ build {
       "echo 'Installing dependencies...'",
       "sudo apt-get install -y unzip nodejs npm",
 
-      "echo 'Creating application user...'",
-      "sudo groupadd csye6225 || echo 'Group already exists'",
-      "sudo useradd --system -g csye6225 csye6225 || echo 'User already exists'",
-
       "echo 'Extracting application files...'",
       "sudo mkdir -p /opt/webapp",
-      "sudo unzip -o /tmp/webapp.zip -d /tmp/webapp",
+      "sudo unzip /tmp/webapp.zip -d /tmp/webapp",
       "sudo cp -R /tmp/webapp/* /opt/webapp/",
+      "ls -la /opt/webapp/",
 
-      "echo 'Setting permissions...'",
+      "sudo groupadd csye6225 || echo 'Group already exists'",
+      "sudo useradd --system -g csye6225 csye6225 || echo 'User already exists'",
       "sudo chown -R csye6225:csye6225 /opt/webapp",
 
-      "echo 'Installing Node.js dependencies...'",
-      "cd /opt/webapp && sudo npm install --production",
+      "if [ -f /opt/webapp/package.json ]; then",
+      "  echo 'Installing Node.js dependencies...'",
+      "  cd /opt/webapp && sudo npm install --production",
+      "fi",
 
       "echo 'Creating placeholder webapp.env file...'",
-      "sudo sh -c 'echo \"NODE_ENV=production\" > /etc/webapp.env'",
-      "sudo sh -c 'echo \"PORT=3000\" >> /etc/webapp.env'",
+      "sudo touch /etc/webapp.env",
       "sudo chmod 600 /etc/webapp.env",
       "sudo chown csye6225:csye6225 /etc/webapp.env",
+      "sudo echo 'NODE_ENV=production' > /etc/webapp.env",
+      "sudo echo 'PORT=3000' >> /etc/webapp.env",
 
       "echo 'Configuring systemd service...'",
-      "sudo cp /tmp/webapp.service /etc/systemd/system/webapp.service",
+      "sudo cp /tmp/systemd.service /etc/systemd/system/webapp.service",
       "sudo chmod 644 /etc/systemd/system/webapp.service",
       "sudo systemctl daemon-reload",
       "sudo systemctl enable webapp.service",
 
-      "echo 'AMI build completed successfully'"
+      "echo 'Note: Service will be started by user-data when instance launches with proper database credentials'"
+    ]
+    environment_vars = [
+      "NODE_ENV=production",
+      "PORT=3000",
     ]
   }
 }
