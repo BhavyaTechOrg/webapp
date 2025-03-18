@@ -1,12 +1,6 @@
-
 variable "ami_id" {
   type        = string
   description = "AMI ID of source image"
-}
-
-variable "IMAGE_NAME" {
-  type        = string
-  description = "Image name for Google Compute Engine"
 }
 
 source "amazon-ebs" "ubuntu" {
