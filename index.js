@@ -2,9 +2,9 @@
 const express = require("express");
 const sequelize = require("./config/db");
 const healthRoutes = require("./routes/healthRoutes");
-const fileRoutes = require('./routes/fileRoutes'); // Import file routes
+const fileRoutes = require("./routes/fileRoutes"); 
 const logger = require("./config/logger");
-const requestLogger = require("./middleware/requestLogger");
+const requestLogger = require("./middleware/logger"); 
 const errorHandler = require("./middleware/errorHandler");
 require("dotenv").config();
 
@@ -12,7 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(requestLogger); // Logging middleware
+app.use(requestLogger);
 app.use("/", healthRoutes);
 app.use("/", fileRoutes); // Add file routes
 
