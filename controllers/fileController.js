@@ -43,7 +43,7 @@ exports.uploadFile = async (req, res) => {
 
     } catch (error) {
         logger.error(`File upload error: ${error.message}`);
-        res.status(500).json({ error: 'File upload failed' });
+        res.status(400).json({ error: 'Bad Request' });
     }
 };
 
@@ -55,7 +55,7 @@ exports.getFile = async (req, res) => {
         }
 
         logger.info(`File metadata retrieved: ${req.params.id}`);
-        res.json({
+        res.status(200).json({
             file_name: file.file_name,
             id: file.id,
             url: file.url,
@@ -63,7 +63,7 @@ exports.getFile = async (req, res) => {
         });
     } catch (error) {
         logger.error(`File retrieval error: ${error.message}`);
-        res.status(500).json({ error: 'File retrieval failed' });
+        res.status(404).json({ error: 'Not Found' });
     }
 };
 
@@ -74,9 +74,13 @@ exports.deleteFile = async (req, res) => {
             return res.status(404).json({ error: 'File not found' });
         }
 
+        // Extract proper key from URL
+        const urlParts = file.url.split('/');
+        const key = urlParts.slice(3).join('/');
+
         const params = {
             Bucket: process.env.S3_BUCKET_NAME,
-            Key: file.url.split('/').pop()
+            Key: key
         };
 
         await s3.deleteObject(params).promise();
@@ -86,6 +90,15 @@ exports.deleteFile = async (req, res) => {
         res.status(204).send();
     } catch (error) {
         logger.error(`File deletion error: ${error.message}`);
-        res.status(500).json({ error: 'File deletion failed' });
+        res.status(404).json({ error: 'Not Found' });
     }
+};
+
+// Handlers for unsupported methods
+exports.methodNotAllowed = (req, res) => {
+    res.status(405).json({ error: 'Method Not Allowed' });
+};
+
+exports.badRequest = (req, res) => {
+    res.status(400).json({ error: 'Bad Request' });
 };
