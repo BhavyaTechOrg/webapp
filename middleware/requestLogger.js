@@ -1,4 +1,3 @@
-// middleware/logger.js
 const logger = require("../config/logger");
 
 const requestLogger = (req, res, next) => {
@@ -6,4 +5,4 @@ const requestLogger = (req, res, next) => {
   next();
 };
 
-module.exports = logger;  
+module.exports = requestLogger; 

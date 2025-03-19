@@ -4,7 +4,7 @@ const sequelize = require("./config/db");
 const healthRoutes = require("./routes/healthRoutes");
 const fileRoutes = require("./routes/fileRoutes"); 
 const logger = require("./config/logger");
-const requestLogger = require("./middleware/logger"); 
+const requestLogger = require("./middleware/requestLogger");
 const errorHandler = require("./middleware/errorHandler");
 require("dotenv").config();
 
