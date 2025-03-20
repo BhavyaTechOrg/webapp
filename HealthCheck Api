@@ -7,3 +7,36 @@ curl -X PUT http://localhost:3000/healthz
 curl -X DELETE http://localhost:3000/healthz
 
 curl -X PATCH http://localhost:3000/healthz
+
+
+* ASSIGNMENT 5
+
+* POST   http://your-public-ip:3000/v1/file
+* GET    http://your-public-ip:3000/v1/file/{id}
+* DELETE http://your-public-ip:3000/v1/file/{id}
+
+
+* NOT SUPPORTED [HTTP METHOD NOT SUPPORTED]
+
+* GET     http://your-public-ip:3000/v1/file
+* DELETE  http://your-public-ip:3000/v1/file
+* HEAD    http://your-public-ip:3000/v1/file
+* OPTIONS http://your-public-ip:3000/v1/file
+* PATCH   http://your-public-ip:3000/v1/file
+* PUT     http://your-public-ip:3000/v1/file
+
+
+* HEAD    http://your-public-ip:3000/v1/file/{id}
+* OPTIONS http://your-public-ip:3000/v1/file/{id}
+* PATCH   http://your-public-ip:3000/v1/file/{id}
+* PUT     http://your-public-ip:3000/v1/file/{id}
+* POST    http://your-public-ip:3000/v1/file/{id}
+
+
+
+
+
+
+
+
+
