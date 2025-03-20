@@ -1,5 +1,80 @@
 # webapp
 
+# Cloud Native Web Application - Assignment 05
+
+## Overview
+
+This repository contains my implementation of Assignment 05 for the Cloud Computing course. I've automated the deployment of a cloud-native web application with RDS database integration and S3 file storage capabilities.
+
+## Implementation Details
+
+### Infrastructure as Code (Terraform)
+
+I've implemented the following resources using Terraform:
+
+- **VPC and Networking**: Reused my previous Terraform configuration for VPC, subnets, and route tables
+- **S3 Bucket**: 
+  - Created a private bucket with UUID-based name
+  - Enabled default encryption
+  - Configured lifecycle policy for STANDARD to STANDARD_IA transition after 30 days
+  - Added bucket policy for secure access
+
+- **IAM Roles**:
+  - Created EC2 instance profile with S3 access permissions
+  - Implemented least privilege principle with specific policies
+
+- **Security Groups**:
+  - Application security group for web traffic
+  - Database security group allowing traffic only from application security group
+
+- **RDS Configuration**:
+  - Custom parameter group for MySQL 8.0
+  - DB instance in private subnet with appropriate specifications
+  - Secured with proper credentials and no public access
+
+### AMI Updates (Packer)
+
+Modified my Packer template to:
+- Remove local database installation
+- Configure SystemD service for auto-start
+- Create dedicated non-privileged application user
+- Set proper file permissions
+
+### Web Application Updates
+
+Updated my web application to:
+- Read database configuration from user data
+- Connect to RDS instance for data persistence
+- Implement file upload/retrieval APIs using S3
+- Store file metadata in RDS
+- Handle proper error responses and edge cases
+
+### How to Deploy
+
+1. Build the AMI using Packer:
+   ```
+   cd packer
+   packer build ami.json
+   ```
+
+2. Deploy infrastructure using Terraform:
+   ```
+   cd terraform
+   terraform init
+   terraform apply
+   ```
+
+3. The application will automatically start on EC2 instance launch
+
+### Testing the Application
+
+I've tested the following functionality:
+- Health check endpoint returns 200 OK
+- File upload to S3 with proper metadata storage
+- File metadata retrieval
+- File deletion from both S3 and database
+- Application auto-start after EC2 reboot
+
 ## Assignment 4
 
 ### Custom Machine Images & CI/CD with Packer, Terraform, and Cloud Integration
