@@ -40,5 +40,5 @@ exports.methodNotAllowed = (req, res) => {
   res.set("Cache-Control", "no-cache, no-store, must-revalidate");
   res.set("Pragma", "no-cache");
   res.set("X-Content-Type-Options", "nosniff");
-  return res.status(405).send(); // No body
+  return res.status(405).send();
 };
