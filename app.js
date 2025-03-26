@@ -11,27 +11,29 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
-// Parse JSON bodies
+// Parse incoming JSON requests
 app.use(express.json());
 
-// HTTP request logging using Morgan + Winston
+// HTTP request logs via morgan + winston
 app.use(
   morgan('combined', {
     stream: {
-      write: (message) => logger.info(message.trim())
+      write: (message) => {
+        logger.info(message.trim(), { type: 'http_request' }); // Tagged for CloudWatch filtering
+      }
     }
   })
 );
 
-// Custom metrics + structured request logging
+// Custom structured request/metrics logging
 app.use(requestLogger);
 
-// API routes
+// Routes
 app.use(healthRoutes);
 app.use(fileRoutes);
 app.use('/', userRoutes);
 
-// Centralized error handling
+// Catch all errors centrally
 app.use(errorHandler);
 
 module.exports = app;

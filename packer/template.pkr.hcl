@@ -63,6 +63,11 @@ build {
       "sudo systemctl daemon-reload",
       "sudo systemctl enable webapp.service",
 
+      "echo 'Creating /var/log/webapp directory for Winston logs...'",
+      "sudo mkdir -p /var/log/webapp",
+      "sudo chown csye6225:csye6225 /var/log/webapp",
+      "sudo chmod 755 /var/log/webapp",
+
       "echo 'Installing CloudWatch Unified Agent (safe)...'",
       "wget -O /tmp/amazon-cloudwatch-agent.deb https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb",
       "sudo dpkg -i /tmp/amazon-cloudwatch-agent.deb || sudo apt-get install -f -y",
