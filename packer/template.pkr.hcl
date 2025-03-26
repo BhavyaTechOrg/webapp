@@ -52,8 +52,8 @@ build {
       "sudo touch /etc/webapp.env",
       "sudo chmod 600 /etc/webapp.env",
       "sudo chown csye6225:csye6225 /etc/webapp.env",
-      "sudo sh -c 'echo \"NODE_ENV=production\" > /etc/webapp.env'", # Fixed with sudo
-      "sudo sh -c 'echo \"PORT=3000\" >> /etc/webapp.env'",          # Fixed with sudo
+      "sudo sh -c 'echo \"NODE_ENV=production\" > /etc/webapp.env'",
+      "sudo sh -c 'echo \"PORT=3000\" >> /etc/webapp.env'",
 
       "echo 'Configuring systemd service...'",
       "sudo cp /tmp/systemd.service /etc/systemd/system/webapp.service",
@@ -61,11 +61,19 @@ build {
       "sudo systemctl daemon-reload",
       "sudo systemctl enable webapp.service",
 
+      "echo 'Installing CloudWatch Unified Agent...'",
+      "wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb",
+      "sudo dpkg -i amazon-cloudwatch-agent.deb",
+
+      "echo 'Configuring CloudWatch Agent...'",
+      "sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc",
+      "sudo touch /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
+
       "echo 'Note: Service will be started by user-data when instance launches with proper database credentials'"
     ]
     environment_vars = [
       "NODE_ENV=production",
-      "PORT=3000",
+      "PORT=3000"
     ]
   }
 }
