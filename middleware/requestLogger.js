@@ -4,17 +4,19 @@ const statsd = require('../config/metrics');
 const requestLogger = (req, res, next) => {
   const startTime = Date.now();
 
-  // Log the incoming request
+  // Capture method and route path
+  const method = req.method.toLowerCase();
+  const routePath = req.originalUrl.replace(/\//g, '_').replace(/:/g, '');
+
   logger.info(`${req.method} ${req.originalUrl}`);
 
   res.on('finish', () => {
     const duration = Date.now() - startTime;
 
-    // Custom Metrics
-    statsd.increment(`api_calls.${req.method.toLowerCase()}`);
-    statsd.timing(`api_request_time.${req.method.toLowerCase()}`, duration);
+    // Metrics: Count and timing per method and route
+    statsd.increment(`api_calls.${method}.${routePath}`);
+    statsd.timing(`api_request_time.${method}.${routePath}`, duration);
 
-    // Optionally log response status & duration
     logger.info(`${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`);
   });
 

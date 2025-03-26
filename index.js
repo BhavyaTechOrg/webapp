@@ -7,6 +7,7 @@ const requestLogger = require('./middleware/requestLogger');
 const errorHandler = require('./middleware/errorHandler');
 const healthRoutes = require('./routes/healthRoutes');
 const fileRoutes = require('./routes/fileRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 dotenv.config();
 
@@ -17,15 +18,15 @@ app.use(express.json());
 
 app.use(morgan('combined', {
   stream: {
-    write: (message) => logger.info(message.trim())
+    write: (message) => logger.info(message.trim(), { type: 'http_request' })
   }
 }));
-
 
 app.use(requestLogger);
 
 app.use('/', healthRoutes);
 app.use('/', fileRoutes);
+app.use('/', userRoutes);
 
 app.use(errorHandler);
 
