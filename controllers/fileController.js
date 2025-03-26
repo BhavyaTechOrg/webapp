@@ -11,6 +11,7 @@ exports.uploadFile = async (req, res) => {
   try {
     if (!req.file) {
       statsd.increment('file_upload.failed');
+      logger.warn('Upload attempt failed: No file was provided in the request.');
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
@@ -40,7 +41,7 @@ exports.uploadFile = async (req, res) => {
 
     statsd.increment('file_upload.success');
     statsd.timing('api_request_time.upload_file', Date.now() - start);
-    logger.info(`File uploaded successfully: ${fileId}`);
+    logger.info(`File uploaded successfully to S3 and recorded in DB. File ID: ${fileId}, Key: ${bucketKey}`);
 
     return res.status(201).json({
       file_name: file.file_name,
@@ -51,7 +52,7 @@ exports.uploadFile = async (req, res) => {
 
   } catch (error) {
     statsd.increment('file_upload.failed');
-    logger.error(`File upload error: ${error.message}`);
+    logger.error(`File upload failed due to server error: ${error.message}`);
     return res.status(400).json({ error: 'Bad Request' });
   }
 };
@@ -67,12 +68,13 @@ exports.getFile = async (req, res) => {
 
     if (!file) {
       statsd.increment('file_get.failed');
+      logger.warn(`File retrieval failed: No file found with ID ${req.params.id}`);
       return res.status(404).json({ error: 'File not found' });
     }
 
     statsd.increment('file_get.success');
     statsd.timing('api_request_time.get_file', Date.now() - start);
-    logger.info(`File metadata retrieved: ${req.params.id}`);
+    logger.info(`File metadata successfully retrieved for ID: ${req.params.id}`);
 
     return res.status(200).json({
       file_name: file.file_name,
@@ -83,7 +85,7 @@ exports.getFile = async (req, res) => {
 
   } catch (error) {
     statsd.increment('file_get.failed');
-    logger.error(`File retrieval error: ${error.message}`);
+    logger.error(`Error retrieving file metadata: ${error.message}`);
     return res.status(404).json({ error: 'File not found' });
   }
 };
@@ -99,11 +101,12 @@ exports.deleteFile = async (req, res) => {
 
     if (!file) {
       statsd.increment('file_delete.failed');
+      logger.warn(`Deletion failed: File not found in DB for ID ${req.params.id}`);
       return res.status(404).json({ error: 'File not found' });
     }
 
     const key = file.s3_key || `user-uploads/${file.id}-${file.file_name}`;
-    logger.info(`Attempting to delete S3 object: ${key}`);
+    logger.info(`Initiating deletion of file from S3 with key: ${key}`);
 
     const s3Start = Date.now();
     await s3.deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: key }).promise();
@@ -113,32 +116,34 @@ exports.deleteFile = async (req, res) => {
 
     statsd.increment('file_delete.success');
     statsd.timing('api_request_time.delete_file', Date.now() - start);
-    logger.info(`File deleted: ${req.params.id}`);
+    logger.info(`File deleted from S3 and removed from DB. File ID: ${req.params.id}`);
     return res.status(204).send();
 
   } catch (error) {
     statsd.increment('file_delete.failed');
 
     if (error.code === 'NoSuchKey') {
-      logger.error(`S3 object not found: ${error.message}`);
+      logger.error(`S3 deletion failed: Object not found - ${error.message}`);
       return res.status(404).json({ error: 'File not found in S3' });
     }
 
     if (error.code === 'AccessDenied') {
-      logger.error(`Access denied to S3: ${error.message}`);
+      logger.error(`S3 deletion failed: Access denied - ${error.message}`);
       return res.status(403).json({ error: 'Access denied to file storage' });
     }
 
-    logger.error(`File deletion error: ${error.message}`);
+    logger.error(`File deletion encountered an unexpected error: ${error.message}`);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
 // Method not allowed / fallback handlers
 exports.methodNotAllowed = (req, res) => {
+  logger.warn(`Method not allowed for route: ${req.originalUrl}`);
   res.status(405).json({ error: 'Method Not Allowed' });
 };
 
 exports.badRequest = (req, res) => {
+  logger.warn(`Bad request received on route: ${req.originalUrl}`);
   res.status(400).json({ error: 'Bad Request' });
 };
