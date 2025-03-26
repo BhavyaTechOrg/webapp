@@ -135,3 +135,5 @@ packer/files/packer-key.json
 packer_errors.txt
 packer_output.txt
 packer_logs.txt
+logs/
+
