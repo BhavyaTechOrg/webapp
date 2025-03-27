@@ -1,7 +1,79 @@
 # webapp
 
+# Assignment 6 - Cloud Infrastructure and Monitoring
 
-# A06
+## Overview
+This project implements a robust cloud infrastructure solution with comprehensive monitoring, logging, and performance tracking using AWS services, Terraform, and CloudWatch.
+
+## Key Components
+
+### 1. Domain Registration
+- Obtain a free `.me` domain using GitHub Student Developer Pack
+- Register through providers like Namecheap, AWS, .tech or GoDaddy
+
+### 2. Infrastructure as Code
+#### Terraform Configuration
+- Manage cloud infrastructure declaratively
+- Define and provision AWS resources
+- Implement Infrastructure as Code (IaC) best practices
+
+### 3. Monitoring and Observability
+
+#### CloudWatch Integration
+- Unified monitoring solution
+- Comprehensive application insights
+- Real-time performance tracking
+
+##### Custom Metrics Collection
+- API Call Metrics
+  - Track number of API invocations
+  - Measure API response times
+- Database Performance Metrics
+  - Query execution time tracking
+- AWS Service Interaction Metrics
+  - S3 service call performance monitoring
+
+#### Logging Strategy
+- Centralized logging in CloudWatch
+- Comprehensive log message capture
+- Error tracking with detailed context
+- Performance and diagnostic insights
+
+### 4. Security and Access Management
+- Robust IAM role configuration
+- Fine-grained access controls
+- Secure CloudWatch agent integration
+
+### 5. AMI and Instance Configuration
+- Packer-based AMI preparation
+- Automated CloudWatch agent installation
+- Self-configuring EC2 instances
+
+## Technical Implementation Details
+
+### Tools and Technologies
+- Domain Registration: Namecheap/GitHub Student Pack
+- Infrastructure: Terraform
+- Cloud Provider: AWS
+- Monitoring: CloudWatch
+- Metrics Collection: StatsDd/collectd
+- AMI Creation: Packer
+
+### Monitoring Metrics Captured
+1. API Usage Metrics
+   - Total API call count
+   - Response time measurements
+2. Database Performance
+   - Query execution duration
+3. AWS Service Interactions
+   - S3 service call performance
+
+### Logging Requirements
+- Capture all user requests
+- Meaningful, grammatically correct logs
+- Comprehensive error tracking
+- Stack trace inclusion for exceptions
+
 
 # Cloud Native Web Application - Assignment 05
 
