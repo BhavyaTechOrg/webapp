@@ -139,11 +139,13 @@ exports.deleteFile = async (req, res) => {
 
 // Method not allowed / fallback handlers
 exports.methodNotAllowed = (req, res) => {
+  statsd.increment("api.method_not_allowed");  // Metrics for unsupported methods
   logger.warn(`Method not allowed for route: ${req.originalUrl}`);
   res.status(405).json({ error: 'Method Not Allowed' });
 };
 
 exports.badRequest = (req, res) => {
+  statsd.increment("api.bad_request");  // Metrics for bad requests
   logger.warn(`Bad request received on route: ${req.originalUrl}`);
   res.status(400).json({ error: 'Bad Request' });
 };

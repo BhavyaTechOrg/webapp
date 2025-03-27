@@ -4,6 +4,7 @@ const statsd = require("../config/metrics");
 
 exports.healthCheck = async (req, res) => {
   const apiStart = Date.now();
+  statsd.increment("api.healthz.attempted");
 
   try {
     // Reject if payload/query/params are present
@@ -62,4 +63,15 @@ exports.methodNotAllowed = (req, res) => {
   res.set("X-Content-Type-Options", "nosniff");
 
   return res.status(405).send();
+};
+
+exports.badRequest = (req, res) => {
+  logger.warn(`Bad request received on route: ${req.originalUrl}`);
+  statsd.increment("api.healthz.bad_request");
+
+  res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.set("Pragma", "no-cache");
+  res.set("X-Content-Type-Options", "nosniff");
+
+  return res.status(400).json({ error: "Bad Request" });
 };
