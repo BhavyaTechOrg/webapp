@@ -10,6 +10,7 @@ const fileRoutes = require('./routes/fileRoutes');
 const userRoutes = require('./routes/userRoutes');
 
 dotenv.config();
+dotenv.config({ path: '/etc/webapp.env' });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
