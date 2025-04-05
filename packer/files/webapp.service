@@ -15,7 +15,7 @@ SyslogIdentifier=webapp-service
 
 Environment="NODE_ENV=production"
 Environment="PORT=3000"
-EnvironmentFile=/opt/.env
+EnvironmentFile=/opt/webapp/.env
 
 [Install]
 WantedBy=multi-user.target
