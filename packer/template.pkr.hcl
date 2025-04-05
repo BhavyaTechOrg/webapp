@@ -8,6 +8,7 @@ source "amazon-ebs" "ubuntu" {
   instance_type = "t2.micro"
   region        = "us-east-1"
   source_ami    = var.ami_id
+  subnet_id     = "subnet-07ecec5011cf08c22"
   ami_users     = ["888577018328", "194722445792"]
   ssh_username  = "ubuntu"
 }
