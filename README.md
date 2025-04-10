@@ -1,5 +1,51 @@
 # webapp
 
+# Assignment 07 - Cloud Infrastructure Scaling and DNS Configuration
+* The assignment focuses on setting up DNS with Route53, implementing auto-scaling for EC2 instances, configuring a load balancer, and integrating these components to create a resilient, scalable web application architecture in AWS.
+
+## DNS Configuration
+- Registered a custom domain name with a domain registrar
+- Created a public hosted zone in Route53 for the main domain
+- Configured domain registrar to use Route53 name servers
+- Created subdomains `dev.domain.tld` and `demo.domain.tld` with dedicated hosted zones
+- Set up zone delegation for subdomains to respective AWS accounts
+
+## Security Groups
+- Created load balancer security group allowing traffic on ports 80/443 from anywhere
+- Updated web application security group to:
+  - Allow SSH (port 22) traffic
+  - Allow application port traffic only from load balancer
+  - Restricted direct internet access to instances
+
+## Auto Scaling Configuration
+- Implemented launch template using custom AMI
+- Configured auto scaling group with:
+  - Min: 3 instances
+  - Max: 5 instances
+  - Initial desired capacity: 1 instance
+  - Cooldown period: 60 seconds
+- Created auto scaling policies:
+  - Scale up when CPU > 5% (increment by 1)
+  - Scale down when CPU < 3% (decrement by 1)
+
+## Application Load Balancer
+- Set up Application Load Balancer (ALB) to distribute traffic
+- Configured ALB to listen on port 80 and forward to application port
+- Associated load balancer security group with ALB
+
+## DNS Integration
+- Added A record in Route53 pointing subdomains to ALB
+- Ensured application is accessible via http://(dev|demo).domain.tld/
+
+## Infrastructure as Code
+- Implemented all components using Terraform
+- Created appropriate IAM roles and policies for services
+
+## Web Application Configuration
+- Ensured application starts automatically on instance launch
+- Configured application to serve content at root context
+
+
 # Assignment 6 - Cloud Infrastructure and Monitoring
 
 ## Overview
