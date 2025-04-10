@@ -53,8 +53,12 @@ jobs:
       - name: Share AMI with Demo Account
         run: |
           aws ec2 modify-image-attribute \
-            --image-id ${{ steps.ami.outputs.ami_id }} \
-            --launch-permission "Add=[{\"UserId\":\"${{ secrets.DEMO_AWS_ACCOUNT_ID }}\"}]"
+          --image-id ${{ steps.ami.outputs.ami_id }} \
+          --attribute launchPermission \
+          --operation-type add \
+          --user-ids ${{ secrets.DEMO_AWS_ACCOUNT_ID }}
+
+           
 
       - name: Switch to AWS CLI (DEMO Account)
         uses: aws-actions/configure-aws-credentials@v4
