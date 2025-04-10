@@ -1,0 +1,115 @@
+name: Deploy on PR Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  deploy:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Application Artifact
+        run: |
+          mkdir -p packer/files
+          zip -r packer/files/webapp.zip . -x ".git/*" ".github/*" "node_modules/*"
+
+      - name: Set up AWS CLI (DEV Account)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Set up Packer
+        uses: hashicorp/setup-packer@v2
+
+      - name: Build AMI with Packer
+        run: |
+          packer init packer/
+          packer build -var "ami_id=${{ vars.AMI_ID }}" packer/template.pkr.hcl
+
+      - name: Extract AMI ID
+        id: ami
+        run: |
+          AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=name,Values=csye6225-webapp-*" --query "sort_by(Images, &CreationDate)[-1].ImageId" --output text)
+          echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
+          echo "AMI ID: $AMI_ID"
+
+      - name: Share AMI with Demo Account
+        run: |
+          aws ec2 modify-image-attribute \
+            --image-id ${{ steps.ami.outputs.ami_id }} \
+            --launch-permission "Add=[{\"UserId\":\"${{ secrets.DEMO_AWS_ACCOUNT_ID }}\"}]"
+
+      - name: Switch to AWS CLI (DEMO Account)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEMO }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEMO }}
+          aws-region: us-east-1
+
+      - name: Get Launch Template ID and ASG Name
+        id: demo-resources
+        run: |
+          LT_ID=$(aws ec2 describe-launch-templates --filters "Name=tag:CreatedBy,Values=Terraform" --query "LaunchTemplates[0].LaunchTemplateId" --output text)
+          ASG_NAME=$(aws autoscaling describe-auto-scaling-groups --query "AutoScalingGroups[?contains(Tags[?Key=='CreatedBy'].Value, 'Terraform')].AutoScalingGroupName" --output text)
+          echo "LAUNCH_TEMPLATE_ID=$LT_ID" >> $GITHUB_ENV
+          echo "ASG_NAME=$ASG_NAME" >> $GITHUB_ENV
+
+      - name: Create new Launch Template version
+        run: |
+          LATEST_VERSION=$(aws ec2 describe-launch-template-versions \
+            --launch-template-id ${{ env.LAUNCH_TEMPLATE_ID }} \
+            --versions '$Latest' \
+            --query 'LaunchTemplateVersions[0].VersionNumber')
+
+          aws ec2 create-launch-template-version \
+            --launch-template-id ${{ env.LAUNCH_TEMPLATE_ID }} \
+            --version-description "New AMI" \
+            --source-version "$LATEST_VERSION" \
+            --launch-template-data "{\"ImageId\":\"${{ steps.ami.outputs.ami_id }}\"}"
+
+      - name: Update ASG to use latest Launch Template
+        run: |
+          aws autoscaling update-auto-scaling-group \
+            --auto-scaling-group-name ${{ env.ASG_NAME }} \
+            --launch-template "LaunchTemplateId=${{ env.LAUNCH_TEMPLATE_ID }},Version=\$Latest"
+
+      - name: Start Instance Refresh
+        id: start-refresh
+        run: |
+          REFRESH_ID=$(aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name ${{ env.ASG_NAME }} \
+            --query "InstanceRefreshId" --output text)
+          echo "REFRESH_ID=$REFRESH_ID" >> $GITHUB_ENV
+
+      - name: Monitor Instance Refresh
+        run: |
+          STATUS="Pending"
+          for i in {1..30}; do
+            STATUS=$(aws autoscaling describe-instance-refreshes \
+              --auto-scaling-group-name ${{ env.ASG_NAME }} \
+              --instance-refresh-ids ${{ env.REFRESH_ID }} \
+              --query "InstanceRefreshes[0].Status" --output text)
+            echo "Refresh status: $STATUS"
+            if [ "$STATUS" == "Successful" ]; then exit 0; fi
+            if [ "$STATUS" == "Cancelled" ] || [ "$STATUS" == "Failed" ]; then exit 1; fi
+            sleep 30
+          done
+          echo "Instance refresh timed out"
+          exit 1
