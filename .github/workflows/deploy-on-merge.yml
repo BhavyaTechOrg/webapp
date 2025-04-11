@@ -58,8 +58,6 @@ jobs:
           --operation-type add \
           --user-ids ${{ secrets.DEMO_AWS_ACCOUNT_ID }}
 
-           
-
       - name: Switch to AWS CLI (DEMO Account)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -105,15 +103,32 @@ jobs:
       - name: Monitor Instance Refresh
         run: |
           STATUS="Pending"
-          for i in {1..30}; do
-            STATUS=$(aws autoscaling describe-instance-refreshes \
+          echo "Starting instance refresh monitoring for refresh ID: ${{ env.REFRESH_ID }}"
+          for i in {1..60}; do
+            echo "Check $i: Querying refresh status..."
+            RAW_STATUS=$(aws autoscaling describe-instance-refreshes \
               --auto-scaling-group-name ${{ env.ASG_NAME }} \
               --instance-refresh-ids ${{ env.REFRESH_ID }} \
-              --query "InstanceRefreshes[0].Status" --output text)
-            echo "Refresh status: $STATUS"
-            if [ "$STATUS" == "Successful" ]; then exit 0; fi
-            if [ "$STATUS" == "Cancelled" ] || [ "$STATUS" == "Failed" ]; then exit 1; fi
+              --output json)
+
+            echo "Raw status response: $RAW_STATUS"
+            STATUS=$(echo "$RAW_STATUS" | grep -o '"Status": \"[^\"]*\"' | cut -d'"' -f4)
+            echo "Extracted status: $STATUS"
+
+            if [[ "$STATUS" == "Successful" || "$STATUS" == "SUCCESSFUL" || "$STATUS" == "successful" ]]; then
+              echo "Instance refresh completed successfully!"
+              exit 0
+            fi
+
+            if [[ "$STATUS" == "Cancelled" || "$STATUS" == "CANCELLED" || "$STATUS" == "cancelled" || \
+                  "$STATUS" == "Failed" || "$STATUS" == "FAILED" || "$STATUS" == "failed" ]]; then
+              echo "Instance refresh failed with status: $STATUS"
+              exit 1
+            fi
+
+            echo "Refresh status: $STATUS (Attempt $i of 60)"
             sleep 30
           done
-          echo "Instance refresh timed out"
+
+          echo "Instance refresh monitoring timed out"
           exit 1
