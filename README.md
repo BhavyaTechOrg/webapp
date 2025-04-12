@@ -59,6 +59,7 @@ aws acm import-certificate \
 - HTTPS implemented for all client-facing endpoints
 - EC2 instances not directly accessible to users
 - Internal traffic between load balancer and EC2 uses HTTP
+  
 
 
 # Assignment 07 - Cloud Infrastructure Scaling and DNS Configuration
