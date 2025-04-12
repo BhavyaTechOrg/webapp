@@ -8,6 +8,7 @@ const errorHandler = require('./middleware/errorHandler');
 const healthRoutes = require('./routes/healthRoutes');
 const fileRoutes = require('./routes/fileRoutes');
 const userRoutes = require('./routes/userRoutes');
+const cicdRoutes = require('./routes/cicdRoutes');
 
 // dotenv.config();
 // dotenv.config({ path: '/etc/webapp.env' });
