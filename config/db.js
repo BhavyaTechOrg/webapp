@@ -25,8 +25,5 @@ const sequelize = new Sequelize(
   }
 );
 
-
-
-
 // Export the Sequelize instance
 module.exports = sequelize;
