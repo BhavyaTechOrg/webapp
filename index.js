@@ -29,6 +29,7 @@ app.use(requestLogger);
 app.use('/', healthRoutes);
 app.use('/', fileRoutes);
 app.use('/', userRoutes);
+app.use('/', cicdRoutes);
 
 app.use(errorHandler);
 

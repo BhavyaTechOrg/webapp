@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const fileRoutes = require('./routes/fileRoutes');
 const healthRoutes = require('./routes/healthRoutes');
 const userRoutes = require('./routes/userRoutes');
+const cicdRoutes = require('./routes/cicdRoutes');
 
 const logger = require('./config/logger');
 const requestLogger = require('./middleware/requestLogger');
@@ -32,6 +33,8 @@ app.use(requestLogger);
 app.use(healthRoutes);
 app.use(fileRoutes);
 app.use('/', userRoutes);
+app.use(cicdRoutes);
+
 
 // Catch all errors centrally
 app.use(errorHandler);
